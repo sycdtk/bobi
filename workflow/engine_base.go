@@ -3,9 +3,6 @@ package workflow
 import (
 	"sync"
 
-	//"github.com/sycdtk/gotools/logger"
-
-	//"github.com/sycdtk/bobi/random"
 	. "github.com/sycdtk/bobi/workflow/model"
 )
 

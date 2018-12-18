@@ -1,7 +1,7 @@
 package workflow
 
 import (
-	"github.com/sycdtk/gotools/logger"
+	"github.com/sycdtk/bobi/logger"
 
 	"github.com/sycdtk/bobi/random"
 	. "github.com/sycdtk/bobi/workflow/model"
