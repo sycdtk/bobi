@@ -7,8 +7,10 @@ import (
 )
 
 var once sync.Once
+var engine *Engine
 
 //流程引擎
+//学习参考：http://www.mossle.com/docs/activiti/index.html#bpmnCustomExtensions
 type Engine struct {
 	//流程定义数据集合：流程ID
 	processDefs map[string]*ProcessDef
@@ -28,8 +30,6 @@ type Engine struct {
 
 //构建函数(单例模式)
 func NewEngine() *Engine {
-	var engine *Engine
-
 	once.Do(func() {
 		processDefs := map[string]*ProcessDef{}
 		nodes := map[string]map[string]*Node{}
@@ -43,7 +43,6 @@ func NewEngine() *Engine {
 	return engine
 }
 
-//维护层
 //加载流程配置到引擎
 func (engine *Engine) Load() {
 

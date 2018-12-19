@@ -9,13 +9,13 @@ import (
 
 //===================================================================================
 //业务层
-//启动流程,构建Process Inscense不做节点提交
+//启动流程,构建Process Inscense,但不做节点提交
 func (engine *Engine) Start(processID string) *ProcessInst {
 
 	//流程起始节点，节点创建实例
 	pd := engine.getProcessDef(processID)
 	sn := engine.getNode(pd.ID, pd.Entrance)
-	ni := sn.NewInst()
+	ni := sn.NewNodeInst()
 
 	//起始节点实例加入token
 	token := &Token{
@@ -43,7 +43,7 @@ func (engine *Engine) Submit(processInstID string) {
 	tTokenMap := map[string]*NodeInst{}
 	for _, ni := range pi.Token.NodeInsts {
 		ni.Exec(func() {
-			logger.Debug("执行", ni.Name)
+			logger.Debug("执行", ni.Name, ni.Type)
 		})
 
 		delete(pi.Token.NodeInsts, ni.ID)
@@ -52,7 +52,7 @@ func (engine *Engine) Submit(processInstID string) {
 
 		for _, nID := range nr.To {
 			newNode := engine.getNode(pi.ProcessID, nID)
-			nni := newNode.NewInst()
+			nni := newNode.NewNodeInst()
 
 			tTokenMap[nni.ID] = nni
 		}
