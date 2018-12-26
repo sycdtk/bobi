@@ -1,9 +1,11 @@
 package workflow
 
 import (
-	"github.com/sycdtk/bobi/logger"
+	"github.com/sycdtk/gotools/logger"
 
-	"github.com/sycdtk/bobi/random"
+	//	"github.com/sycdtk/bobi/logger"
+
+	//"github.com/sycdtk/bobi/random"
 	. "github.com/sycdtk/bobi/workflow/model"
 )
 
@@ -18,46 +20,59 @@ func (engine *Engine) Start(processID string) *ProcessInst {
 	ni := sn.NewNodeInst()
 
 	//起始节点实例加入token
-	token := &Token{
-		ID:        random.UniqueID(),
-		NodeInsts: map[string]*NodeInst{ni.ID: ni},
-	}
+	pi := NewProcessInst(pd, NewToken(ni))
 
-	pi := &ProcessInst{
-		ID:        random.UniqueID(),
-		Name:      pd.Name,
-		ProcessID: pd.ID,
-		Token:     token,
-	}
-
-	//返回流程实例
 	engine.setProcessInst(pi)
-
+	//返回流程实例
 	return pi
 }
 
 //提交流程实例：流程实例流转过程中，当前处理人员提交
-func (engine *Engine) Submit(processInstID string) {
+func (engine *Engine) Submit(processInstID, nodeInstID string) {
 	pi := engine.getProcessInst(processInstID)
-
-	tTokenMap := map[string]*NodeInst{}
+	logger.Info("-----\n" + nodeInstID)
 	for _, ni := range pi.Token.NodeInsts {
-		ni.Exec(func() {
-			logger.Debug("执行", ni.Name, ni.Type)
-		})
-
-		delete(pi.Token.NodeInsts, ni.ID)
-
-		nr := engine.getRelation(pi.ProcessID, ni.NodeID)
-
-		for _, nID := range nr.To {
-			newNode := engine.getNode(pi.ProcessID, nID)
-			nni := newNode.NewNodeInst()
-
-			tTokenMap[nni.ID] = nni
-		}
+		logger.Info(ni.Name)
 	}
-	pi.Token.NodeInsts = tTokenMap
+
+	//确认提交的动作节点处于token中
+	if ni, ok := pi.Token.NodeInsts[nodeInstID]; ok {
+
+		//判断节点类型
+		switch ni.Type {
+
+		case BeginNode: //开始节点,出路有且仅有一条
+			//判断入向类型，开始节点无入向
+			//判断出向类型
+			if ni.OutType == Exclusive { //排他
+				logger.Info(ni.Name, ni.OutType)
+			} else if ni.OutType == Parallel { //并行
+				logger.Info(ni.Name, ni.OutType)
+			} else if ni.OutType == Inclusive { //包含
+				logger.Info(ni.Name, ni.OutType)
+			}
+
+		case EndNode: //结束节点
+
+		case UserNode: //用户任务节点（默认类型）
+
+		case AutoNode: //自动任务节点
+
+		case SubProcessNode: //子流程
+
+		default:
+
+		}
+
+		//节点移动
+		node := engine.getNode(pi.ProcessID, ni.NodeID)
+		nextNode := engine.getNode(pi.ProcessID, node.To[0].NodeID)
+		nextNodeInst := nextNode.NewNodeInst()
+		delete(pi.Token.NodeInsts, nodeInstID)
+		pi.Token.NodeInsts[nextNodeInst.ID] = nextNodeInst
+
+	}
+
 }
 
 //转交流程实例：流程实例流转过程中，由当前节点的处理人员转交给其他人员

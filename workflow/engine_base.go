@@ -16,10 +16,6 @@ type Engine struct {
 	processDefs map[string]*ProcessDef
 	//节点数据集合：流程ID，节点ID
 	nodes map[string]map[string]*Node
-	//连线数据集合：流程ID，连线ID
-	lines map[string]map[string]*Line
-	//节点上的连线：流程ID，节点ID
-	relations map[string]map[string]*Relation
 
 	//运行数据:流程实例集合
 	prcessInsts map[string]*ProcessInst
@@ -33,11 +29,9 @@ func NewEngine() *Engine {
 	once.Do(func() {
 		processDefs := map[string]*ProcessDef{}
 		nodes := map[string]map[string]*Node{}
-		lines := map[string]map[string]*Line{}
-		relations := map[string]map[string]*Relation{}
 		prcessInsts := map[string]*ProcessInst{}
 		version := "0.0.1"
-		engine = &Engine{processDefs: processDefs, nodes: nodes, lines: lines, relations: relations, prcessInsts: prcessInsts, version: version}
+		engine = &Engine{processDefs: processDefs, nodes: nodes, prcessInsts: prcessInsts, version: version}
 	})
 
 	return engine
@@ -71,58 +65,23 @@ func (engine *Engine) setProcess(processDef *ProcessDef, newNodes []*Node, newLi
 		engine.nodes[processDef.ID][node.ID] = node
 	}
 
-	//3、存入连线
-	//流程不存在，将创建流程连线集合
-	if _, ok := engine.lines[processDef.ID]; !ok {
-		processLines := make(map[string]*Line)
-		engine.lines[processDef.ID] = processLines
-	}
-
-	//4、创建关系集合
-	if _, ok := engine.relations[processDef.ID]; !ok {
-		processRelations := make(map[string]*Relation)
-		engine.relations[processDef.ID] = processRelations
-	}
-
+	//3、构建节点关系,若连线两端的节点不在节点集合中将被忽略
 	for _, line := range newLines {
-		//无论连线是否存在，都做覆盖
-		engine.lines[processDef.ID][line.ID] = line
-
-		//构建节点间关系
-		if _, ok := engine.relations[processDef.ID][line.From]; !ok {
-			engine.relations[processDef.ID][line.From] = &Relation{ID: line.From, To: []string{line.To}}
-		} else {
-			engine.relations[processDef.ID][line.From].To = append(engine.relations[processDef.ID][line.From].To, line.To)
+		if node, ok := engine.nodes[processDef.ID][line.From]; ok {
+			node.To = append(node.To, &Relation{NodeID: line.To, Rule: line.Rule})
 		}
 
-		if _, ok := engine.relations[processDef.ID][line.To]; !ok {
-			engine.relations[processDef.ID][line.To] = &Relation{ID: line.To, From: []string{line.From}}
-		} else {
-			engine.relations[processDef.ID][line.To].From = append(engine.relations[processDef.ID][line.To].From, line.From)
+		if node, ok := engine.nodes[processDef.ID][line.To]; ok {
+			node.From = append(node.From, &Relation{NodeID: line.From, Rule: line.Rule})
 		}
 	}
+
 }
 
 //获取节点
 func (engine *Engine) getNode(processID string, nodeID string) *Node {
 	if _, ok := engine.nodes[processID]; ok {
 		return engine.nodes[processID][nodeID]
-	}
-	return nil
-}
-
-//获取连线
-func (engine *Engine) getLine(processID string, lineID string) *Line {
-	if _, ok := engine.lines[processID]; ok {
-		return engine.lines[processID][lineID]
-	}
-	return nil
-}
-
-//获取节点关系
-func (engine *Engine) getRelation(processID string, nodeID string) *Relation {
-	if _, ok := engine.relations[processID]; ok {
-		return engine.relations[processID][nodeID]
 	}
 	return nil
 }

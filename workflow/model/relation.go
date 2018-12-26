@@ -2,7 +2,13 @@ package model
 
 //节点间关系对象
 type Relation struct {
-	ID   string   //节点ID
-	From []string //来向节点ID
-	To   []string //去向节点ID
+	NodeID string //被关联节点ID
+	Rule   string //流转规则，默认没有时直接执行
+}
+
+func (rel *Relation) CheckRule() bool {
+	if rel.Rule == "aa" {
+		return true
+	}
+	return false
 }

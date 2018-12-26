@@ -23,31 +23,62 @@ import (
 //    汇聚： 所有并行分支到达包含网关，会进入等待章台， 直到每个包含流程token的进入顺序流的分支都到达。 这是与并行网关的最大不同。换句话说，包含网关只会等待被选中执行了的进入顺序流。 在汇聚之后，流程会穿过包含网关继续执行。
 //  注意，如果同一个包含节点拥有多个进入和外出顺序流， 它就会同时含有分支和汇聚功能。 这时，网关会先汇聚所有拥有流程token的进入顺序流， 再根据条件判断结果为true的外出顺序流，为它们生成多条并行分支。
 const (
-	BeginNode        = 1000 //开始节点
-	EndNode          = 2000 //结束节点
-	UserNode         = 3000 //用户任务节点（默认类型）
-	AutoNode         = 3001 //自动任务节点
-	SubProcessNode   = 3002 //子流程
-	ExclusiveGateway = 4001 //排他网关
-	ParallelGateway  = 4002 //并行网关
-	InclusiveGateway = 4003 //包含网关
-	SubProcess       = 4004 //子流程
+	BeginNode      = 1001 //节点类型：开始节点
+	EndNode        = 1002 //节点类型：结束节点
+	UserNode       = 1003 //节点类型：用户任务节点（默认类型）
+	AutoNode       = 1004 //节点类型：自动任务节点
+	SubProcessNode = 1005 //节点类型：子流程节点
+	Exclusive      = 2001 //节点出入路径规则类型：排他（默认类型）
+	Parallel       = 2002 //节点出入路径规则类型：并行
+	Inclusive      = 2003 //节点出入路径规则类型：包含
+
 )
 
 //流程节点
 type Node struct {
 	ID   string
 	Name string
-	Type int //节点类型
+
+	Type    int //节点类型
+	InType  int //入节点规则类型
+	OutType int //出节点规则类型
+
+	From []*Relation //节点入向关系
+	To   []*Relation //节点出向关系
 
 	Tasks []string //节点任务 Task Id 集合
 }
 
+func NewNode(Name string, Type, InType, OutType int) *Node {
+	return &Node{
+		ID:      random.UniqueID(),
+		Name:    Name,
+		Type:    Type,
+		InType:  InType,
+		OutType: OutType,
+		From:    []*Relation{},
+		To:      []*Relation{},
+	}
+}
+
 func (node *Node) NewNodeInst() *NodeInst {
+
+	in, out := Exclusive, Exclusive
+
+	if node.InType != 0 {
+		in = node.InType
+	}
+
+	if node.OutType != 0 {
+		out = node.OutType
+	}
+
 	return &NodeInst{
-		ID:     random.UniqueID(),
-		NodeID: node.ID,
-		Name:   node.Name,
-		Type:   node.Type,
+		ID:      random.UniqueID(),
+		NodeID:  node.ID,
+		Name:    node.Name,
+		Type:    node.Type,
+		InType:  in,
+		OutType: out,
 	}
 }
