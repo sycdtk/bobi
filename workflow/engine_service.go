@@ -28,16 +28,10 @@ func (engine *Engine) Start(processID string) *ProcessInst {
 }
 
 //提交流程实例：流程实例流转过程中，当前处理人员提交
-func (engine *Engine) Submit(processInstID, nodeInstID string) {
+func (engine *Engine) Submit(processInstID, nodeID string) {
 	pi := engine.getProcessInst(processInstID)
-	logger.Info("-----\n" + nodeInstID)
-	for _, ni := range pi.Token.NodeInsts {
-		logger.Info(ni.Name)
-	}
 
-	//确认提交的动作节点处于token中
-	if ni, ok := pi.Token.NodeInsts[nodeInstID]; ok {
-
+	if ni := pi.Token.FindByNodeID(nodeID); ni != nil {
 		//判断节点类型
 		switch ni.Type {
 
@@ -45,7 +39,22 @@ func (engine *Engine) Submit(processInstID, nodeInstID string) {
 			//判断入向类型，开始节点无入向
 			//判断出向类型
 			if ni.OutType == Exclusive { //排他
-				logger.Info(ni.Name, ni.OutType)
+				//节点移动
+				node := engine.getNode(pi.ProcessID, ni.NodeID)
+				if node != nil && len(node.To) > 0 {
+					for _, relation := range node.To {
+						//TODO 以下为测试逻辑，需要增加规则判断逻辑
+						if relation.Rule == "" {
+							nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
+							nextNodeInst := nextNode.NewNodeInst()
+							//TODO 测试逻辑，需要处理并行的情况
+							pi.Token.Remove(ni)
+							pi.Token.Save(nextNodeInst)
+							break
+						}
+					}
+				}
+
 			} else if ni.OutType == Parallel { //并行
 				logger.Info(ni.Name, ni.OutType)
 			} else if ni.OutType == Inclusive { //包含
@@ -55,6 +64,30 @@ func (engine *Engine) Submit(processInstID, nodeInstID string) {
 		case EndNode: //结束节点
 
 		case UserNode: //用户任务节点（默认类型）
+			//判断入向类型，开始节点无入向
+			//判断出向类型
+			if ni.OutType == Exclusive { //排他
+				//节点移动
+				node := engine.getNode(pi.ProcessID, ni.NodeID)
+				if node != nil && len(node.To) > 0 {
+					for _, relation := range node.To {
+						//TODO 以下为测试逻辑，需要增加规则判断逻辑
+						if relation.Rule == "" {
+							nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
+							nextNodeInst := nextNode.NewNodeInst()
+							//TODO 测试逻辑，需要处理并行的情况
+							pi.Token.Remove(ni)
+							pi.Token.Save(nextNodeInst)
+							break
+						}
+					}
+				}
+
+			} else if ni.OutType == Parallel { //并行
+				logger.Info(ni.Name, ni.OutType)
+			} else if ni.OutType == Inclusive { //包含
+				logger.Info(ni.Name, ni.OutType)
+			}
 
 		case AutoNode: //自动任务节点
 
@@ -63,14 +96,6 @@ func (engine *Engine) Submit(processInstID, nodeInstID string) {
 		default:
 
 		}
-
-		//节点移动
-		node := engine.getNode(pi.ProcessID, ni.NodeID)
-		nextNode := engine.getNode(pi.ProcessID, node.To[0].NodeID)
-		nextNodeInst := nextNode.NewNodeInst()
-		delete(pi.Token.NodeInsts, nodeInstID)
-		pi.Token.NodeInsts[nextNodeInst.ID] = nextNodeInst
-
 	}
 
 }

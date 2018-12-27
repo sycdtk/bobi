@@ -30,7 +30,7 @@ func TestLoadAndRunSeq(t *testing.T) {
 
 	//3、建立关系
 	l1 := NewLine("连接1", n0.ID, n1.ID, "")
-	l2 := NewLine("连接2", n1.ID, n2.ID, "bb")
+	l2 := NewLine("连接2", n1.ID, n2.ID, "")
 	l3 := NewLine("连接3", n2.ID, n3.ID, "")
 
 	//4、指定流程定义入口节点
@@ -39,6 +39,7 @@ func TestLoadAndRunSeq(t *testing.T) {
 	//5、流程定义存入引擎
 	engine.setProcess(pd, []*Node{n0, n1, n2, n3}, []*Line{l1, l2, l3})
 
+	t.Log("节点信息: Begin\n")
 	//	输出信息
 	for _, p := range engine.nodes {
 		for _, n := range p {
@@ -49,15 +50,29 @@ func TestLoadAndRunSeq(t *testing.T) {
 			for _, r := range n.To {
 				t.Log("+-To:", r.NodeID)
 			}
-			t.Log("--------------------------")
+			t.Log("\n")
 		}
 	}
+	t.Log("节点信息: End ============================")
+	t.Log("Token信息: Begin ============================")
 
 	pi := engine.Start(pd.ID)
+
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step1 :", ni.Name)
+	}
+
 	engine.Submit(pi.ID, n0.ID)
-	engine.Submit(pi.ID, n1.ID)
-	engine.Submit(pi.ID, n2.ID)
-	engine.Submit(pi.ID, n3.ID)
-	engine.Submit(pi.ID, n3.ID) //冗余提交
+
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step2 :", ni.Name)
+	}
+
+	t.Log("Token信息: End ============================")
+
+	//	engine.Submit(pi.ID, n1.ID)
+	//	engine.Submit(pi.ID, n2.ID)
+	//	engine.Submit(pi.ID, n3.ID)
+	//	engine.Submit(pi.ID, n3.ID) //冗余提交
 
 }
