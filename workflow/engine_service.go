@@ -35,9 +35,8 @@ func (engine *Engine) Submit(processInstID, nodeID string) {
 		//判断节点类型
 		switch ni.Type {
 
-		case BeginNode: //开始节点,出路有且仅有一条
-			//判断入向类型，开始节点无入向
-			//判断出向类型
+		case BeginNode:
+			//判断出向类型，开始节点无入向
 			if ni.OutType == Exclusive { //排他
 				//节点移动
 				node := engine.getNode(pi.ProcessID, ni.NodeID)
@@ -62,6 +61,29 @@ func (engine *Engine) Submit(processInstID, nodeID string) {
 			}
 
 		case EndNode: //结束节点
+			//判断入向类型，结束节点无入向
+			if ni.InType == Exclusive { //排他
+				//节点移动
+				node := engine.getNode(pi.ProcessID, ni.NodeID)
+				if node != nil && len(node.To) > 0 {
+					for _, relation := range node.To {
+						//TODO 以下为测试逻辑，需要增加规则判断逻辑
+						if relation.Rule == "" {
+							nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
+							nextNodeInst := nextNode.NewNodeInst()
+							//TODO 测试逻辑，需要处理并行的情况
+							pi.Token.Remove(ni)
+							pi.Token.Save(nextNodeInst)
+							break
+						}
+					}
+				}
+
+			} else if ni.OutType == Parallel { //并行
+				logger.Info(ni.Name, ni.OutType)
+			} else if ni.OutType == Inclusive { //包含
+				logger.Info(ni.Name, ni.OutType)
+			}
 
 		case UserNode: //用户任务节点（默认类型）
 			//判断入向类型，开始节点无入向
