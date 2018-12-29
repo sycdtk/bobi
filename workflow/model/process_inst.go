@@ -10,7 +10,7 @@ type ProcessInst struct {
 	ProcessID  string //流程定义ID
 	Name       string
 	ProcessDef *ProcessDef //流程定义
-	Token      *Token
+	Token      *Token      //执行中节点集
 }
 
 func NewProcessInst(pd *ProcessDef, token *Token) *ProcessInst {

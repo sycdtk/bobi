@@ -4,7 +4,7 @@ import (
 	"github.com/sycdtk/bobi/random"
 )
 
-//流程实例令牌
+//流程实例令牌，存放执行中的节点和节点实例
 type Token struct {
 	id        string
 	nodeInsts map[string]*NodeInst //key nodeInstID 当前运行节点实例集合

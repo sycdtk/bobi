@@ -20,6 +20,8 @@ type Engine struct {
 	//运行数据:流程实例集合
 	prcessInsts map[string]*ProcessInst
 
+	rules map[string]*Rule
+
 	//引擎版本
 	version string
 }
