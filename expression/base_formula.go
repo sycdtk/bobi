@@ -7,12 +7,14 @@ import (
 
 	"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/rpn"
+	"github.com/sycdtk/bobi/set"
 	"github.com/sycdtk/bobi/stack"
 )
 
 const (
-	separator = "|"
-	space     = " "
+	separator        = "|"
+	whiteSpace       = " "
+	dataSetSeparator = ","
 )
 
 var formulaMu = new(sync.Mutex)      //表达式集合写锁
@@ -29,7 +31,8 @@ func Reg(name, formula string) {
 }
 
 //基于逆波兰结构表达式进行实际数据计算，返回结果字符串
-func Calc(rpnExpName string, kvMap map[string]string) string {
+//kvMap中集合类型，用英文逗号分隔，例如：a,b,c,d
+func Calc(rpnExpName string, kvMap map[string]string) bool {
 
 	if exp, ok := formulaMap[rpnExpName]; ok {
 
@@ -42,7 +45,7 @@ func Calc(rpnExpName string, kvMap map[string]string) string {
 
 		s := stack.NewStack()
 
-		for _, op := range strings.Split(calcExp, space) {
+		for _, op := range strings.Split(calcExp, whiteSpace) {
 			switch op {
 			case "@AND":
 				stack.Push(s, AND(s))
@@ -63,17 +66,17 @@ func Calc(rpnExpName string, kvMap map[string]string) string {
 			case "@LE":
 				stack.Push(s, LE(s))
 			case "@EQ":
-				stack.Push(s, LT(s))
+				stack.Push(s, EQ(s))
 			case "@NEQ":
-				stack.Push(s, LE(s))
+				stack.Push(s, NEQ(s))
 			default:
 				stack.Push(s, op)
 			}
 		}
 
-		return stack.Pop(s)
+		return StrToBool(stack.Pop(s))
 	}
-	return Float64ToStr(badvalue)
+	return false
 }
 
 //逻辑运算AND
@@ -123,7 +126,7 @@ func IN(s *stack.Stack) string {
 
 	args := reverseArgs(s)
 
-	value := in(StrToFloat64(stack.Pop(args)), StrToFloat64(stack.Pop(args)))
+	value := in(stack.Pop(args), StrToSet(stack.Pop(args)))
 
 	return BoolToStr(value)
 }
@@ -133,7 +136,7 @@ func NIN(s *stack.Stack) string {
 
 	args := reverseArgs(s)
 
-	value := nin(StrToFloat64(stack.Pop(args)), StrToFloat64(stack.Pop(args)))
+	value := nin(stack.Pop(args), StrToSet(stack.Pop(args)))
 
 	return BoolToStr(value)
 }
@@ -234,6 +237,20 @@ func StrToInt64(v string) int64 {
 //float64转换为字符串
 func Int64ToStr(v int64) string {
 	return strconv.FormatInt(v, 10)
+}
+
+//字符串转为Set集合，字符串以英文,分隔
+func StrToSet(v string) *Set {
+	dataSet := set.NewSet()
+	for _, s := range strings.Split(v, dataSetSeparator) {
+		dataSet.Add(s)
+	}
+	return dataSet
+}
+
+//Set集合转为字符串，以英文,分隔
+func SetToStr(v *Set) string {
+	return v.ToString()
 }
 
 //参数反转
