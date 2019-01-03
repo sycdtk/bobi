@@ -15,12 +15,12 @@ const (
 )
 
 //逻辑关系：@AND、@OR、@NOT
-//字符串：等于@SEQ("a","b")、不等于@NOT(@EQ("a","b"))、包含@IN("a",dataset)、不包含@NOT(@IN("a",dataset))
-//数值：大于@GT、大于等于@GE、小于@LT、小于等于@LE、等于@EQ、不等于@NOT(@EQ(1,2))
+//字符串：等于@EQ、不等于@NE、包含@IN("a",dataset)、不包含@NIN("a",dataset)
+//数值：大于@GT、大于等于@GE、小于@LT、小于等于@LE、等于@EQ、不等于@NE
 var functionNames = []string{
 	"@AND", "@OR", "@NOT",
-	"@SEQ", "@IN",
-	"@GT", "@GE", "@LT", "@LE", "@EQ"} //函数名称
+	"@IN", "@NIN",
+	"@GT", "@GE", "@LT", "@LE", "@EQ", "@NE"} //函数名称
 
 //表达式解析函数
 //输入表达式串，输出逆波兰表达式结果
