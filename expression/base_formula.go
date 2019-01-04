@@ -146,7 +146,7 @@ func EQ(s *stack.Stack) string {
 
 	args := reverseArgs(s)
 
-	value := eq(StrToFloat64(stack.Pop(args)), StrToFloat64(stack.Pop(args)))
+	value := eq(stack.Pop(args), stack.Pop(args))
 
 	return BoolToStr(value)
 }
@@ -156,7 +156,7 @@ func NEQ(s *stack.Stack) string {
 
 	args := reverseArgs(s)
 
-	value := neq(StrToFloat64(stack.Pop(args)), StrToFloat64(stack.Pop(args)))
+	value := neq(stack.Pop(args), stack.Pop(args))
 
 	return BoolToStr(value)
 }
@@ -240,7 +240,7 @@ func Int64ToStr(v int64) string {
 }
 
 //字符串转为Set集合，字符串以英文,分隔
-func StrToSet(v string) *Set {
+func StrToSet(v string) *set.Set {
 	dataSet := set.NewSet()
 	for _, s := range strings.Split(v, dataSetSeparator) {
 		dataSet.Add(s)
@@ -249,7 +249,7 @@ func StrToSet(v string) *Set {
 }
 
 //Set集合转为字符串，以英文,分隔
-func SetToStr(v *Set) string {
+func SetToStr(v *set.Set) string {
 	return v.ToString()
 }
 

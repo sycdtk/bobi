@@ -32,6 +32,9 @@ func TestSet(t *testing.T) {
 	} else {
 		t.Log("Contains eee")
 	}
+
+	t.Log(s.ToString())
+
 }
 
 func BenchmarkStack(b *testing.B) {

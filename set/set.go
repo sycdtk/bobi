@@ -33,7 +33,10 @@ func (set *Set) ToString() string {
 	for k, _ := range set.datas {
 		s = s + "," + k
 	}
-	return strings.TrimSuffix(s, ",")
+	if len(s) > 0 {
+		return strings.TrimPrefix(s, ",")
+	}
+	return s
 }
 
 func NewSet() *Set {

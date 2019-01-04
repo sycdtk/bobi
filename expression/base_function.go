@@ -41,25 +41,25 @@ func not(v bool) bool {
 
 //是否包含：字符串是否包含在set中
 //若包含，则返回true，若不包含返回false
-func in(str, dataSet *Set) bool {
+func in(str string, dataSet *set.Set) bool {
 	return dataSet.Contains(str)
 }
 
 //是否 未 包含：字符串是否 未 包含在set中
 //若包含，则返回false，若不包含返回true
-func in(str, dataSet *Set) bool {
+func nin(str string, dataSet *set.Set) bool {
 	return !dataSet.Contains(str)
 }
 
 //"true" if value1 is equal to value2
 //若v1与v2相等，返回true，否则返回false
-func eq(v1, v2 float64) bool {
+func eq(v1, v2 string) bool {
 	return v1 == v2
 }
 
 //"true" if value1 is not equal to value2
 //若v1与v2不相等，返回true，否则返回false
-func ne(v1, v2 float64) bool {
+func neq(v1, v2 string) bool {
 	return v1 != v2
 }
 
