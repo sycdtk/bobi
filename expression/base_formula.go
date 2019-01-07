@@ -43,6 +43,8 @@ func Calc(rpnExpName string, kvMap map[string]string) bool {
 			calcExp = strings.Replace(calcExp, k, v, -1)
 		}
 
+		logger.Debug("带入模板后表达式：", calcExp)
+
 		s := stack.NewStack()
 
 		for _, op := range strings.Split(calcExp, whiteSpace) {

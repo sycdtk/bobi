@@ -5,6 +5,10 @@ type Stack struct {
 	datas []string
 }
 
+//func (stack *Stack) ToString() string {
+//	return strings.Join(stack.datas, ",")
+//}
+
 //压栈
 func Push(s *Stack, v string) {
 	s.datas = append(s.datas, v)
