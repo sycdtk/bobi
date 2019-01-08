@@ -1,4 +1,4 @@
-package exprssion
+package expression
 
 import (
 	"github.com/sycdtk/bobi/set"

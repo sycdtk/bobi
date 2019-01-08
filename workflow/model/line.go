@@ -13,7 +13,7 @@ type Line struct {
 	Rule *Rule  //规则
 }
 
-func NewLine(Name, From, To, Rule string) *Line {
+func NewLine(Name, From, To, RuleStr string) *Line {
 	return &Line{
 		ID:   random.UniqueID(),
 		Name: Name,
@@ -22,7 +22,7 @@ func NewLine(Name, From, To, Rule string) *Line {
 		Rule: &Rule{
 			ID:         random.UniqueID(),
 			Name:       Name + "Rule",
-			Expression: Rule,
+			Expression: RuleStr,
 		},
 	}
 }

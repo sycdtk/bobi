@@ -43,7 +43,7 @@ func (engine *Engine) Submit(processInstID, nodeID string) {
 				if node != nil && len(node.To) > 0 {
 					for _, relation := range node.To {
 						//TODO 以下为测试逻辑，需要增加规则判断逻辑
-						if relationCheck(relation, pi.Data) {
+						if engine.relationCheck(relation, pi.Data) {
 							nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
 							nextNodeInst := nextNode.NewNodeInst()
 							//TODO 测试逻辑，需要处理并行的情况
@@ -68,7 +68,7 @@ func (engine *Engine) Submit(processInstID, nodeID string) {
 				if node != nil && len(node.To) > 0 {
 					for _, relation := range node.To {
 						//TODO 以下为测试逻辑，需要增加规则判断逻辑
-						if relationCheck(relation, pi.Data) {
+						if engine.relationCheck(relation, pi.Data) {
 							nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
 							nextNodeInst := nextNode.NewNodeInst()
 							//TODO 测试逻辑，需要处理并行的情况
@@ -94,7 +94,7 @@ func (engine *Engine) Submit(processInstID, nodeID string) {
 				if node != nil && len(node.To) > 0 {
 					for _, relation := range node.To {
 						//TODO 以下为测试逻辑，需要增加规则判断逻辑
-						if relationCheck(relation, pi.Data) {
+						if engine.relationCheck(relation, pi.Data) {
 							nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
 							nextNodeInst := nextNode.NewNodeInst()
 							//TODO 测试逻辑，需要处理并行的情况

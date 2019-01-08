@@ -70,7 +70,7 @@ func (engine *Engine) setProcess(processDef *ProcessDef, newNodes []*Node, newLi
 	for _, line := range newLines {
 
 		//注册表达式
-		exprssion.Reg(line.Rule.ID, line.Rule.Expression)
+		expression.Reg(line.Rule.ID, line.Rule.Expression)
 
 		if node, ok := engine.nodes[processDef.ID][line.From]; ok {
 			node.To = append(node.To, &Relation{NodeID: line.To, Rule: line.Rule})

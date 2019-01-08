@@ -1,4 +1,4 @@
-package exprssion
+package expression
 
 //公式模板
 //var formulas = map[string]string{}

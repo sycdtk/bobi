@@ -1,4 +1,4 @@
-package exprssion
+package expression
 
 import (
 	"strconv"
