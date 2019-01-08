@@ -3,7 +3,7 @@ package exprssion
 //公式模板
 //var formulas = map[string]string{}
 
-//加载公式模板
+//TODO 启动时加载
 //func init() {
 //	//CAC – 08CVCONSTRAINED Percent of CVs at active constraint
 //	Reg("CAC", "@MUL(@DIV(@IF(@AND(@NE(DEPACT,0),@OR(@EQ(DEPSTA,0),@EQ(DEPSTA,2),@EQ(DEPSTA,3))),1,0),IPNDEP),100)")

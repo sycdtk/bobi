@@ -10,7 +10,7 @@ type Line struct {
 	Name string
 	From string //来向节点Id
 	To   string //去向节点Id
-	Rule string //规则
+	Rule *Rule  //规则
 }
 
 func NewLine(Name, From, To, Rule string) *Line {
@@ -19,6 +19,10 @@ func NewLine(Name, From, To, Rule string) *Line {
 		Name: Name,
 		From: From,
 		To:   To,
-		Rule: Rule,
+		Rule: &Rule{
+			ID:         random.UniqueID(),
+			Name:       Name + "Rule",
+			Expression: Rule,
+		},
 	}
 }

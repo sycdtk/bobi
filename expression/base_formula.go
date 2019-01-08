@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sycdtk/bobi/logger"
+	//"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/rpn"
 	"github.com/sycdtk/bobi/set"
 	"github.com/sycdtk/bobi/stack"
@@ -25,9 +25,10 @@ func Reg(name, formula string) {
 	formulaMu.Lock()
 	defer formulaMu.Unlock()
 
+	//TODO 1、表达式正则检查
 	formulaMap[name] = rpn.Parse(formula)
 
-	logger.Debug("表达式解析：", name, formula, rpn.Parse(formula))
+	//logger.Debug("表达式解析：", name, formula, rpn.Parse(formula))
 }
 
 //基于逆波兰结构表达式进行实际数据计算，返回结果字符串
@@ -43,7 +44,7 @@ func Calc(rpnExpName string, kvMap map[string]string) bool {
 			calcExp = strings.Replace(calcExp, k, v, -1)
 		}
 
-		logger.Debug("带入模板后表达式：", calcExp)
+		//logger.Debug("带入模板后表达式：", calcExp)
 
 		s := stack.NewStack()
 

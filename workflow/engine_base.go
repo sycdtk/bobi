@@ -3,6 +3,7 @@ package workflow
 import (
 	"sync"
 
+	"github.com/sycdtk/bobi/expression"
 	. "github.com/sycdtk/bobi/workflow/model"
 )
 
@@ -19,8 +20,6 @@ type Engine struct {
 
 	//运行数据:流程实例集合
 	prcessInsts map[string]*ProcessInst
-
-	rules map[string]*Rule
 
 	//引擎版本
 	version string
@@ -69,6 +68,10 @@ func (engine *Engine) setProcess(processDef *ProcessDef, newNodes []*Node, newLi
 
 	//3、构建节点关系,若连线两端的节点不在节点集合中将被忽略
 	for _, line := range newLines {
+
+		//注册表达式
+		exprssion.Reg(line.Rule.ID, line.Rule.Expression)
+
 		if node, ok := engine.nodes[processDef.ID][line.From]; ok {
 			node.To = append(node.To, &Relation{NodeID: line.To, Rule: line.Rule})
 		}
@@ -106,6 +109,11 @@ func (engine *Engine) getProcessInst(processInstID string) *ProcessInst {
 
 func (engine *Engine) setProcessInst(pi *ProcessInst) {
 	engine.prcessInsts[pi.ID] = pi
+}
+
+func (engine *Engine) relationCheck(relation *Relation, data map[string]string) bool {
+	return expression.Calc(relation.Rule.ID, data)
+
 }
 
 //流程引擎版本

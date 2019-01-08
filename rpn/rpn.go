@@ -20,7 +20,7 @@ const (
 var functionNames = []string{
 	"@AND", "@OR", "@NOT",
 	"@IN", "@NIN",
-	"@GT", "@GE", "@LT", "@LE", "@EQ", "@NE"} //函数名称
+	"@GT", "@GE", "@LT", "@LE", "@EQ", "@NEQ"} //函数名称
 
 //表达式解析函数
 //输入表达式串，输出逆波兰表达式结果
