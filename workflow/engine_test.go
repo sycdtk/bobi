@@ -30,8 +30,8 @@ func TestLoadAndRunSeq(t *testing.T) {
 
 	//3、建立关系
 	l1 := NewLine("连接1", n0.ID, n1.ID, "@EQ(aa,data1)")
-	l2 := NewLine("连接2", n1.ID, n2.ID, "@EQ(aa,data1)")
-	l3 := NewLine("连接3", n2.ID, n3.ID, "@EQ(aa,data1)")
+	l2 := NewLine("连接2", n1.ID, n2.ID, "@IN(aa,data2)")
+	l3 := NewLine("连接3", n2.ID, n3.ID, "@NIN(ww,data2)")
 
 	//4、指定流程定义入口节点
 	pd.Entrance = n0.ID
@@ -57,8 +57,10 @@ func TestLoadAndRunSeq(t *testing.T) {
 	t.Log("Token信息: Begin ============================")
 
 	pi := engine.Start(pd.ID)
-	pi.Data["data1"] = "aa1"
+	pi.Data["data1"] = "aa"
+	pi.Data["data2"] = "aa1,bb,cc,aa"
 
+	//第一步 开始
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step1 :", ni.Name)
 	}
@@ -68,9 +70,9 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step2 :", ni.Name)
 	}
-
 	t.Log("Token信息: End ============================")
 
+	//第二步 步骤一
 	t.Log("Token信息: Begin ============================")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step2 :", ni.Name)
@@ -81,12 +83,71 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step3 :", ni.Name)
 	}
-
 	t.Log("Token信息: End ============================")
 
-	//	engine.Submit(pi.ID, n1.ID)
-	//	engine.Submit(pi.ID, n2.ID)
-	//	engine.Submit(pi.ID, n3.ID)
-	//	engine.Submit(pi.ID, n3.ID) //冗余提交
+	//第二步 步骤一 重复提交
+	t.Log("Token信息: Begin ============================")
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step2 :", ni.Name)
+	}
+
+	engine.Submit(pi.ID, n1.ID)
+
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step3 :", ni.Name)
+	}
+	t.Log("Token信息: End ============================")
+
+	//第三步 步骤二
+	t.Log("Token信息: Begin ============================")
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step3 :", ni.Name)
+	}
+
+	engine.Submit(pi.ID, n2.ID)
+
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step4 :", ni.Name)
+	}
+	t.Log("Token信息: End ============================")
+
+	//第三步 步骤二 重复提交
+	t.Log("Token信息: Begin ============================")
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step3 :", ni.Name)
+	}
+
+	engine.Submit(pi.ID, n2.ID)
+
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step4 :", ni.Name)
+	}
+	t.Log("Token信息: End ============================")
+
+	//第四步 结束
+	t.Log("Token信息: Begin ============================")
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step4 :", ni.Name)
+	}
+
+	engine.Submit(pi.ID, n3.ID)
+
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step5 :", ni.Name)
+	}
+	t.Log("Token信息: End ============================")
+
+	//第四步 结束
+	t.Log("Token信息: Begin ============================")
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step4 :", ni.Name)
+	}
+
+	engine.Submit(pi.ID, n3.ID)
+
+	for _, ni := range pi.Token.AllNodeInst() {
+		t.Log("Token Step5 :", ni.Name)
+	}
+	t.Log("Token信息: End ============================")
 
 }
