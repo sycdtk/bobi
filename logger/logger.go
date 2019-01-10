@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/sycdtk/gotools/config"
+	"github.com/sycdtk/bobi/config"
 )
 
 const (
