@@ -31,15 +31,23 @@ func (engine *Engine) Start(processID string) *ProcessInst {
 func (engine *Engine) push(processInstID, nodeID string) {
 	pi := engine.getProcessInst(processInstID)
 	if ni := pi.Token.FindByNodeID(nodeID); ni != nil {
-		//1、检查出向节点是否允许提交
+		//1、检查节点入向其他节点是否都已经满足条件
+		//a->node->b，node为当前节点，检查a->node的条件是否都满足
 		switch ni.InType {
 		case Exclusive: //排他，直接略过，允许提交
-		case Parallel: //并行，
-		case Inclusive: //包含，
+		case Parallel: //并行，所有入向连线关联的节点都已经不在token中，否则break
+			node := engine.getNode(pi.ProcessID, nodeID)
+			for relation := range node.From {
+				if niTmp := pi.Token.FindByNodeID(relation.NodeID); niTmp != nil {
+					break
+				}
+			}
+		case Inclusive: //包含
 		default: //默认排他，直接提交
-
 		}
+
 		//2、检查出向节点是否满足提交条件，满足则在token中去除
+		//a->node->b，node为当前节点，检查a->node的条件是否都满足
 
 		//3、检查入向节点是否满足入向条件，满足则将入向节点加入token
 

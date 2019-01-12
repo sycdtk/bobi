@@ -5,14 +5,14 @@ import (
 )
 
 const (
-	BeginNode      = 1001 //节点类型：开始节点
-	EndNode        = 1002 //节点类型：结束节点
-	UserNode       = 1003 //节点类型：用户任务节点（默认类型）
-	AutoNode       = 1004 //节点类型：自动任务节点
-	SubProcessNode = 1005 //节点类型：子流程节点
-	Exclusive      = 2001 //节点出入路径规则类型：排他（默认类型）
-	Parallel       = 2002 //节点出入路径规则类型：并行
-	Inclusive      = 2003 //节点出入路径规则类型：包含
+	BeginNode      = 2001 //节点类型：开始节点
+	EndNode        = 2002 //节点类型：结束节点
+	UserNode       = 2003 //节点类型：用户任务节点（默认类型）
+	AutoNode       = 2004 //节点类型：自动任务节点
+	SubProcessNode = 2005 //节点类型：子流程节点
+	Exclusive      = 3001 //节点出入路径规则类型：排他（默认类型）
+	Parallel       = 3002 //节点出入路径规则类型：并行
+	Inclusive      = 3003 //节点出入路径规则类型：包含
 )
 
 //流程节点
@@ -58,6 +58,7 @@ func (node *Node) NewNodeInst() *NodeInst {
 		ID:      random.UniqueID(),
 		NodeID:  node.ID,
 		Name:    node.Name,
+		Status:  Ready,
 		Type:    node.Type,
 		InType:  in,
 		OutType: out,
