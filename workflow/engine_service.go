@@ -37,17 +37,31 @@ func (engine *Engine) push(processInstID, nodeID string) {
 		case Exclusive: //排他，直接略过，允许提交
 		case Parallel: //并行，所有入向连线关联的节点都已经不在token中，否则break
 			node := engine.getNode(pi.ProcessID, nodeID)
-			for relation := range node.From {
+			for _, relation := range node.From {
 				if niTmp := pi.Token.FindByNodeID(relation.NodeID); niTmp != nil {
 					break
 				}
 			}
-		case Inclusive: //包含
+		case Inclusive: //TODO 包含
 		default: //默认排他，直接提交
 		}
 
 		//2、检查出向节点是否满足提交条件，满足则在token中去除
 		//a->node->b，node为当前节点，检查a->node的条件是否都满足
+		switch ni.OutType {
+		case Exclusive: //排他，任何一个出向规则成立则从token中去除
+			node := engine.getNode(pi.ProcessID, nodeID)
+			for _, relation := range node.To {
+				if engine.relationCheck(pi.ProcessId, nodeID) {
+					pi.Token.Remove(ni)
+					break //首次匹配后及退出循环
+				}
+			}
+
+		case Parallel: //并行，存在大于1的所有满足条件，则从token中去除
+		case Inclusive: //TODO 包含
+		default: //默认排他
+		}
 
 		//3、检查入向节点是否满足入向条件，满足则将入向节点加入token
 
