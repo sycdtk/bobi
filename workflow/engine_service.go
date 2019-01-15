@@ -1,9 +1,7 @@
 package workflow
 
 import (
-	"github.com/sycdtk/gotools/logger"
-
-	//	"github.com/sycdtk/bobi/logger"
+	"github.com/sycdtk/bobi/logger"
 
 	//"github.com/sycdtk/bobi/random"
 	. "github.com/sycdtk/bobi/workflow/model"
@@ -31,25 +29,89 @@ func (engine *Engine) Start(processID string) *ProcessInst {
 func (engine *Engine) push(processInstID, nodeID string) {
 	pi := engine.getProcessInst(processInstID)
 	if ni := pi.Token.FindByNodeID(nodeID); ni != nil {
+		//是否允许节点提交
+		canSubmit := true
+
 		//1、检查节点入向其他节点是否都已经满足条件
 		//a->node->b，node为当前节点，检查a->node的条件是否都满足
 		switch ni.InType {
-		case Exclusive: //排他，直接略过，允许提交
 		case Parallel: //并行，所有入向连线关联的节点都已经不在token中，否则break
 			node := engine.getNode(pi.ProcessID, nodeID)
 			for relation := range node.From {
 				if niTmp := pi.Token.FindByNodeID(relation.NodeID); niTmp != nil {
+					canSubmit = false
 					break
 				}
 			}
-		case Inclusive: //包含
-		default: //默认排他，直接提交
+		case Inclusive: //TODO 包含
+		default: // Exclusive 默认排他，直接略过，允许提交
 		}
 
-		//2、检查出向节点是否满足提交条件，满足则在token中去除
-		//a->node->b，node为当前节点，检查a->node的条件是否都满足
+		if canSubmit {
+			//2、检查出向节点是否满足提交条件，满足则在token中去除
+			//a->node->b，node为当前节点，检查a->node的条件是否都满足
+			//是否允许下一节点激活
+			//			activeNodes := []Node{}
+			switch ni.OutType {
+			case Parallel: //并行，所有入向连线关联的节点都已经不在token中，否则break
+				node := engine.getNode(pi.ProcessID, nodeID)
+				if node != nil && len(node.To) > 0 {
+					toLineNum := 0
+					for _, relation := range node.To {
+						//节点规则判断，首个匹配条件则提交
+						if engine.relationCheck(relation, pi.Data) {
+							toLineNum = toLineNum + 1
+						}
+					}
 
-		//3、检查入向节点是否满足入向条件，满足则将入向节点加入token
+					if len(node.To) == toLineNum { //所有出向条件都满足，则提交，从token中删除
+						//节点状态变化
+						ni.Status = Closed
+						//更新流程状态
+						pi.Status.Del(ni.Name)
+						//更新token
+						pi.Token.Remove(ni)
+
+						canActive = true
+
+					} else { //未完全满足，则节点状态置为waiting
+						//节点状态变化
+						ni.Status = Waiting
+					}
+				}
+			case Inclusive: //TODO 包含
+			default: //Exclusive 排他,只要满足一个条件，就提交至满足条件关联关系的下一个节点
+				node := engine.getNode(pi.ProcessID, nodeID)
+				if node != nil && len(node.To) > 0 {
+					for _, relation := range node.To {
+						//节点规则判断，首个匹配条件则提交
+						if engine.relationCheck(relation, pi.Data) {
+							//节点状态变化
+							ni.Status = Closed
+							//更新流程状态
+							pi.Status.Del(ni.Name)
+							//更新token
+							pi.Token.Remove(ni)
+
+							canActive = true
+
+							break
+						}
+					}
+				}
+			}
+
+			if canActive {
+				//3、检查入向节点是否满足入向条件，满足则将入向节点加入token
+				//		nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
+				//		nextNodeInst := nextNode.NewNodeInst()
+				//		nextNodeInst.Status = Running
+				//		//流程状态变化
+				//		pi.Status.Add(nextNodeInst.Name)
+				//		pi.Token.Save(nextNodeInst)
+			}
+
+		}
 
 	}
 }
