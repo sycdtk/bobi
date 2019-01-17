@@ -1,7 +1,7 @@
 package workflow
 
 import (
-	"github.com/sycdtk/bobi/logger"
+	//"github.com/sycdtk/bobi/logger"
 
 	//"github.com/sycdtk/bobi/random"
 	. "github.com/sycdtk/bobi/workflow/model"
@@ -37,7 +37,7 @@ func (engine *Engine) push(processInstID, nodeID string) {
 		switch ni.InType {
 		case Parallel: //并行，所有入向连线关联的节点都已经不在token中，否则break
 			node := engine.getNode(pi.ProcessID, nodeID)
-			for relation := range node.From {
+			for _, relation := range node.From {
 				if niTmp := pi.Token.FindByNodeID(relation.NodeID); niTmp != nil {
 					canSubmit = false
 					break
@@ -51,20 +51,21 @@ func (engine *Engine) push(processInstID, nodeID string) {
 			//2、检查出向节点是否满足提交条件，满足则在token中去除
 			//a->node->b，node为当前节点，检查a->node的条件是否都满足
 			//是否允许下一节点激活
-			//			activeNodes := []Node{}
+			canActive := false
+			activeRelations := []*Relation{}
+
 			switch ni.OutType {
 			case Parallel: //并行，所有入向连线关联的节点都已经不在token中，否则break
 				node := engine.getNode(pi.ProcessID, nodeID)
 				if node != nil && len(node.To) > 0 {
-					toLineNum := 0
 					for _, relation := range node.To {
 						//节点规则判断，首个匹配条件则提交
 						if engine.relationCheck(relation, pi.Data) {
-							toLineNum = toLineNum + 1
+							activeRelations = append(activeRelations, relation)
 						}
 					}
 
-					if len(node.To) == toLineNum { //所有出向条件都满足，则提交，从token中删除
+					if len(node.To) == len(activeRelations) { //所有出向条件都满足，则提交，从token中删除
 						//节点状态变化
 						ni.Status = Closed
 						//更新流程状态
@@ -93,6 +94,8 @@ func (engine *Engine) push(processInstID, nodeID string) {
 							//更新token
 							pi.Token.Remove(ni)
 
+							activeRelations = append(activeRelations, relation)
+
 							canActive = true
 
 							break
@@ -101,23 +104,67 @@ func (engine *Engine) push(processInstID, nodeID string) {
 				}
 			}
 
-			if canActive {
+			if canActive && len(activeRelations) > 0 {
 				//3、检查入向节点是否满足入向条件，满足则将入向节点加入token
-				//		nextNode := engine.getNode(pi.ProcessID, relation.NodeID)
-				//		nextNodeInst := nextNode.NewNodeInst()
-				//		nextNodeInst.Status = Running
-				//		//流程状态变化
-				//		pi.Status.Add(nextNodeInst.Name)
-				//		pi.Token.Save(nextNodeInst)
+				for _, activeRelation := range activeRelations {
+					nextNode := engine.getNode(pi.ProcessID, activeRelation.NodeID)
+
+					canAddToken := true
+					//新节点入向检查，与节点入向检查方式一致
+					//a->node->b，node为当前节点，检查a->node的条件是否都满足
+					switch nextNode.InType {
+					case Parallel: //并行，所有入向连线关联的节点都已经不在token中，否则break
+						for _, relation := range nextNode.From {
+							if niTmp := pi.Token.FindByNodeID(relation.NodeID); niTmp != nil {
+								canAddToken = false
+								break
+							}
+						}
+					case Inclusive: //TODO 包含
+					default: // Exclusive 默认排他，直接略过，允许提交
+					}
+
+					if canAddToken {
+						nextNodeInst := nextNode.NewNodeInst()
+						nextNodeInst.Status = Running
+						//流程状态变化
+						pi.Status.Add(nextNodeInst.Name)
+						pi.Token.Save(nextNodeInst)
+					}
+				}
 			}
-
 		}
-
 	}
 }
 
 //提交流程实例：流程实例流转过程中，当前处理人员提交
 func (engine *Engine) Submit(processInstID, nodeID string) {
+
+	pi := engine.getProcessInst(processInstID)
+
+	if ni := pi.Token.FindByNodeID(nodeID); ni != nil {
+		//判断节点类型
+		switch ni.Type {
+
+		case UserNode: //用户任务节点（默认类型）
+			engine.push(processInstID, nodeID)
+
+		case BeginNode: //开始节点
+			engine.push(processInstID, nodeID)
+
+		case AutoNode: //自动任务节点
+			engine.push(processInstID, nodeID)
+
+		case SubProcessNode: //子流程
+			engine.push(processInstID, nodeID)
+
+		case EndNode: //结束节点
+			engine.push(processInstID, nodeID)
+
+		default: //用户任务节点（默认类型）
+			engine.push(processInstID, nodeID)
+		}
+	}
 
 	//	pi := engine.getProcessInst(processInstID)
 

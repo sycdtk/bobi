@@ -54,13 +54,12 @@ func TestLoadAndRunSeq(t *testing.T) {
 		}
 	}
 	t.Log("节点信息: End ============================\n")
-	t.Log("Token信息: Begin ============================")
 
 	pi := engine.Start(pd.ID)
 	pi.Data["data1"] = "aa"
 	pi.Data["data2"] = "aa1,bb,cc,aa"
 
-	//第一步 开始
+	t.Log("============================第一次提交")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step1 :", ni.Name)
 	}
@@ -70,10 +69,8 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step2 :", ni.Name)
 	}
-	t.Log("Token信息: End ============================")
 
-	//第二步 步骤一
-	t.Log("Token信息: Begin ============================")
+	t.Log("============================第二次提交")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step2 :", ni.Name)
 	}
@@ -83,10 +80,8 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step3 :", ni.Name)
 	}
-	t.Log("Token信息: End ============================")
 
-	//第二步 步骤一 重复提交
-	t.Log("Token信息: Begin ============================")
+	t.Log("============================第三次提交（重复第二次提交）")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step2 :", ni.Name)
 	}
@@ -96,10 +91,8 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step3 :", ni.Name)
 	}
-	t.Log("Token信息: End ============================")
 
-	//第三步 步骤二
-	t.Log("Token信息: Begin ============================")
+	t.Log("============================第四次提交")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step3 :", ni.Name)
 	}
@@ -109,10 +102,8 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step4 :", ni.Name)
 	}
-	t.Log("Token信息: End ============================")
 
-	//第三步 步骤二 重复提交
-	t.Log("Token信息: Begin ============================")
+	t.Log("============================第五次提交（重复第四次提交）")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step3 :", ni.Name)
 	}
@@ -122,10 +113,8 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step4 :", ni.Name)
 	}
-	t.Log("Token信息: End ============================")
 
-	//第四步 结束
-	t.Log("Token信息: Begin ============================")
+	t.Log("============================第六次提交（提交结束）")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step4 :", ni.Name)
 	}
@@ -135,10 +124,7 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step5 :", ni.Name)
 	}
-	t.Log("Token信息: End ============================")
-
-	//第四步 结束
-	t.Log("Token信息: Begin ============================")
+	t.Log("============================第七次提交（重复提交结束）")
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step4 :", ni.Name)
 	}
@@ -148,6 +134,5 @@ func TestLoadAndRunSeq(t *testing.T) {
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log("Token Step5 :", ni.Name)
 	}
-	t.Log("Token信息: End ============================")
 
 }
