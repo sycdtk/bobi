@@ -13,9 +13,9 @@ var engine *Engine
 //流程引擎
 //学习参考：http://www.mossle.com/docs/activiti/index.html#bpmnCustomExtensions
 type Engine struct {
-	//流程定义数据集合：流程ID
+	//流程定义数据集合：流程定义ID
 	processDefs map[string]*ProcessDef
-	//节点数据集合：流程ID，节点ID
+	//节点数据集合：流程定义ID，节点ID
 	nodes map[string]map[string]*Node
 
 	//运行数据:流程实例集合
