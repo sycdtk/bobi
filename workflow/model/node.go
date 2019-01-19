@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/sycdtk/bobi/random"
+	"github.com/sycdtk/bobi/vuser"
 )
 
 const (
@@ -27,18 +28,22 @@ type Node struct {
 	From []*Relation //节点入向关系
 	To   []*Relation //节点出向关系
 
+	VirtualUser string //VUserID
+
 	Tasks []string //节点任务 Task Id 集合
 }
 
 func NewNode(Name string, Type, InType, OutType int) *Node {
+	id := random.UniqueID()
 	return &Node{
-		ID:      random.UniqueID(),
-		Name:    Name,
-		Type:    Type,
-		InType:  InType,
-		OutType: OutType,
-		From:    []*Relation{},
-		To:      []*Relation{},
+		ID:          id,
+		Name:        Name,
+		Type:        Type,
+		InType:      InType,
+		OutType:     OutType,
+		From:        []*Relation{},
+		To:          []*Relation{},
+		VirtualUser: vuser.NewVUser("Node"+id, "流程处理人").ID,
 	}
 }
 
@@ -55,12 +60,13 @@ func (node *Node) NewNodeInst() *NodeInst {
 	}
 
 	return &NodeInst{
-		ID:      random.UniqueID(),
-		NodeID:  node.ID,
-		Name:    node.Name,
-		Status:  Ready,
-		Type:    node.Type,
-		InType:  in,
-		OutType: out,
+		ID:          random.UniqueID(),
+		NodeID:      node.ID,
+		Name:        node.Name,
+		Status:      Ready,
+		Type:        node.Type,
+		InType:      in,
+		OutType:     out,
+		VirtualUser: node.VirtualUser,
 	}
 }

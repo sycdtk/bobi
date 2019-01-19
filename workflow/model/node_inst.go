@@ -9,13 +9,16 @@ const (
 
 //节点实例
 type NodeInst struct {
-	ID        string
-	NodeID    string //流程定义节点ID
-	Name      string
-	Status    int         //节点状态
-	Type      int         //节点类型，与Node共用类型
-	InType    int         //入节点规则类型
-	OutType   int         //出节点规则类型
+	ID      string
+	NodeID  string //流程定义节点ID
+	Name    string
+	Status  int //节点状态
+	Type    int //节点类型，与Node共用类型
+	InType  int //入节点规则类型
+	OutType int //出节点规则类型
+
+	VirtualUser string //VUserID
+
 	TaskInsts []*TaskInst //节点任务实例
 
 	ExecSeq string //节点实例执行顺序

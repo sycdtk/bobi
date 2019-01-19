@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	separator        = "|"
-	whiteSpace       = " "
-	dataSetSeparator = ","
+	separator  = "|"
+	whiteSpace = " "
 )
 
 var formulaMu = new(sync.Mutex)      //表达式集合写锁
@@ -244,16 +243,12 @@ func Int64ToStr(v int64) string {
 
 //字符串转为Set集合，字符串以英文,分隔
 func StrToSet(v string) *set.Set {
-	dataSet := set.NewSet()
-	for _, s := range strings.Split(v, dataSetSeparator) {
-		dataSet.Add(s)
-	}
-	return dataSet
+	return set.NewSet().Load(v)
 }
 
 //Set集合转为字符串，以英文,分隔
 func SetToStr(v *set.Set) string {
-	return v.ToString()
+	return v.String()
 }
 
 //参数反转

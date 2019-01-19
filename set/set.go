@@ -28,7 +28,7 @@ func (set *Set) Size() int {
 }
 
 //返回字符串集合，以英文逗号分隔
-func (set *Set) ToString() string {
+func (set *Set) String() string {
 	s := ""
 	for k, _ := range set.datas {
 		s = s + "," + k
@@ -37,6 +37,36 @@ func (set *Set) ToString() string {
 		return strings.TrimPrefix(s, ",")
 	}
 	return s
+}
+
+//set载入数据字符串，字符串以","分割
+func (set *Set) Load(str string) *Set {
+	for _, data := range strings.Split(str, ",") {
+		set.datas[data] = true
+	}
+	return set
+}
+
+//清空数据
+func (set *Set) Clear() {
+	set.datas = map[string]bool{}
+}
+
+//判断是否为空
+func (set *Set) Empty() bool {
+	if len(set.datas) > 0 {
+		return false
+	}
+	return true
+}
+
+//返回数组
+func (set *Set) Array() []string {
+	a := []string{}
+	for k, _ := range set.datas {
+		a = append(a, k)
+	}
+	return a
 }
 
 func NewSet() *Set {

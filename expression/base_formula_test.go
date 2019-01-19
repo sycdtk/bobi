@@ -91,15 +91,15 @@ func TestFunction(t *testing.T) {
 	}
 
 	if StrToSet("aaa").Size() == 1 {
-		t.Log("StrToSet(\"aaa\").Size() == 1", StrToSet("aaa").ToString())
+		t.Log("StrToSet(\"aaa\").Size() == 1", StrToSet("aaa").String())
 	} else {
-		t.Error("error:", "StrToSet(\"aaa\").Size() == 1", StrToSet("aaa").ToString())
+		t.Error("error:", "StrToSet(\"aaa\").Size() == 1", StrToSet("aaa").String())
 	}
 
 	if StrToSet("aaa,bbb,ccc").Size() == 3 {
-		t.Log("StrToSet(\"aaa,bbb,ccc\").Size() == 3", StrToSet("aaa,bbb,ccc").ToString())
+		t.Log("StrToSet(\"aaa,bbb,ccc\").Size() == 3", StrToSet("aaa,bbb,ccc").String())
 	} else {
-		t.Error("error:", "StrToSet(\"aaa,bbb,ccc\").Size() == 3", StrToSet("aaa,bbb,ccc").ToString())
+		t.Error("error:", "StrToSet(\"aaa,bbb,ccc\").Size() == 3", StrToSet("aaa,bbb,ccc").String())
 	}
 
 }
