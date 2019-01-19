@@ -68,10 +68,10 @@ func (c *config) initConfig(path string) {
 			continue
 		}
 
-		//TODO:key中包含[] 会读取失败
+		//首尾 包含[] 将认为是 strcet
 		n1 := strings.Index(s, "[")
 		n2 := strings.LastIndex(s, "]")
-		if n1 > -1 && n2 > -1 && n2 > n1+1 {
+		if n1 == 0 && n2 == (len(s)-1) {
 			c.strcet = strings.TrimSpace(s[n1+1 : n2])
 			continue
 		}

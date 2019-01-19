@@ -7,7 +7,7 @@ import (
 func TestRead(t *testing.T) {
 
 	if "werqwecxv" != Read("www", "aaa") {
-		t.Fatal("aaa=werqwecxv")
+		t.Fatal("aaa=werqwecxv", Read("www", "aaa"))
 	}
 
 	if "twer etrew%%&%*" != Read("zzz", "vv") {
@@ -46,13 +46,17 @@ func TestRead(t *testing.T) {
 		t.Fatal("wrong     = somet[hi]ng")
 	}
 
+	if "postgres://postgres:123456@localhost/mofy?sslmode=disable" != Read("postgres", "conn") {
+		t.Fatal("conn = postgres://postgres:123456@localhost/mofy?sslmode=disable")
+	}
+
 	t.Log("success!")
 }
 
 func TestLoad(t *testing.T) {
 	Load("config1.conf")
 	if "11111111" != Read("www", "aaa") {
-		t.Fatal("[www]aaa != 11111111")
+		t.Fatal("[www]aaa != 11111111", Read("www", "aaa"))
 	}
 
 }
