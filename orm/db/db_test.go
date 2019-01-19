@@ -6,7 +6,7 @@ import (
 
 func TestDB(t *testing.T) {
 
-	results := Pool.Query("SELECT id,username FROM users")
+	results := Pool.Query("SELECT id,username FROM test ")
 
 	for _, row := range results {
 
@@ -14,9 +14,23 @@ func TestDB(t *testing.T) {
 
 			if len(string(cell)) > 8 {
 			} else {
-				fmt.Println(string(cell))
+				t.Log(string(cell))
 			}
 		}
-		fmt.Println("")
+		t.Log("")
+	}
+
+	results = Pool.QueryDB("test2", "SELECT id,username FROM test1 ")
+
+	for _, row := range results {
+
+		for _, cell := range row {
+
+			if len(string(cell)) > 8 {
+			} else {
+				t.Log(string(cell))
+			}
+		}
+		t.Log("")
 	}
 }

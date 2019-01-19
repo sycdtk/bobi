@@ -3,7 +3,7 @@ package errtools
 import (
 	"errors"
 
-	"github.com/sycdtk/gotools/logger"
+	"github.com/sycdtk/bobi/logger"
 )
 
 //创建异常

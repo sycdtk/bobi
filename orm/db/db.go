@@ -2,10 +2,13 @@ package db
 
 import (
 	"database/sql"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/sycdtk/bobi/config"
 	"github.com/sycdtk/bobi/errtools"
+	"github.com/sycdtk/bobi/logger"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -33,6 +36,7 @@ func init() {
 	newDBPool()
 
 	dbNames := strings.Split(config.Read("db", "dbName"), ",")
+	defaultDB := config.Read("db", "default")
 
 	for _, dbName := range dbNames {
 		//数据库类型
@@ -59,8 +63,11 @@ func init() {
 
 		//加入多源数据库连接
 		Pool.conns[dbName] = db
+
+		logger.Debug(dbName, "init success")
+
 		//默认数据库
-		if config.Read(dbName, "default") == "true" {
+		if dbName == defaultDB {
 			Pool.conns["default"] = db
 		}
 	}
@@ -69,37 +76,39 @@ func init() {
 
 // Query  "SELECT * FROM users"
 func (p *DBPool) Query(querySql string, args ...interface{}) [][]sql.RawBytes {
-	return QueryDB("default", querySql, args)
+	return p.QueryDB("default", querySql, args...)
 }
 
 func (p *DBPool) QueryDB(dbName, querySql string, args ...interface{}) [][]sql.RawBytes {
 
-	rows, err := p.conns[dbName].Query(querySql, args...)
-	errtools.CheckErr(err, "SQL 查询失败:", querySql, args)
-
-	defer rows.Close()
-
-	cols, err := rows.Columns() // 获取列数
-	errtools.CheckErr(err, "SQL 获取结果失败:", querySql, args)
-
 	var results [][]sql.RawBytes
 
-	for rows.Next() {
+	if db, ok := p.conns[dbName]; ok {
+		rows, err := db.Query(querySql, args...)
+		errtools.CheckErr(err, "SQL 查询失败:", querySql, args)
 
-		r := make([]interface{}, len(cols))
-		rv := make([]sql.RawBytes, len(cols))
+		defer rows.Close()
 
-		for i := range rv {
-			r[i] = &rv[i]
+		cols, err := rows.Columns() // 获取列数
+		errtools.CheckErr(err, "SQL 获取结果失败:", querySql, args)
+
+		for rows.Next() {
+
+			r := make([]interface{}, len(cols))
+			rv := make([]sql.RawBytes, len(cols))
+
+			for i := range rv {
+				r[i] = &rv[i]
+			}
+
+			err = rows.Scan(r...)
+			errtools.CheckErr(err, "SQL 结果解析失败:", querySql, args)
+
+			results = append(results, rv)
 		}
 
-		err = rows.Scan(r...)
-		errtools.CheckErr(err, "SQL 结果解析失败:", querySql, args)
-
-		results = append(results, rv)
+		logger.Debug("SQL 查询完成：", querySql, args)
 	}
-
-	logger.Debug("SQL 查询完成：", querySql, args)
 
 	return results
 }
