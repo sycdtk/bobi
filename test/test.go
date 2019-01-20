@@ -1,15 +1,34 @@
 package test
 
 import (
-	"log"
-	"strings"
+	"fmt"
+	"reflect"
 )
 
+type Aaa struct {
+	ID       string
+	Username string
+}
+
+func indirect(t reflect.Type) (reflect.Type, bool) {
+	if t.Kind() == reflect.Ptr {
+		return t.Elem(), true
+	}
+	return t, false
+}
+
 func TMain() {
-	s := "[asdfa[sdf]]"
-	n1 := strings.Index(s, "[")
-	n2 := strings.LastIndex(s, "]")
+	var obj interface{}
+	t, v := indirect(reflect.TypeOf(&Aaa{}))
+	if v {
+		obj = reflect.New(t).Elem().Interface()
+	} else {
+		obj = reflect.New(t).Interface()
+	}
 
-	log.Println(n1, n2, len(s))
+	vv := reflect.ValueOf(obj)
+	vv.Elem().FieldByName("ID").SetString("1234")
 
+	fmt.Println(obj.(Aaa).ID)
+	fmt.Println(obj.(Aaa).Username)
 }

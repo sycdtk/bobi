@@ -1,7 +1,6 @@
 package structinfo
 
 import (
-	"fmt"
 	"testing"
 	"time"
 )
@@ -15,17 +14,17 @@ type MyStruct struct {
 func TestNewStructInfo(t *testing.T) {
 	si := NewStructInfo(&MyStruct{})
 
-	fmt.Println(si.Pkg)
-	fmt.Println(si.Name)
+	t.Log(si.Pkg)
+	t.Log(si.Name)
 	for _, f := range si.Fields {
-		fmt.Println(f.Name)
-		fmt.Println(f.Type)
+		t.Log(f.Name)
+		t.Log(f.Type)
 		for _, ft := range f.Tags {
-			fmt.Println(ft.Name, ft.Value)
+			t.Log(ft.Name, ft.Value)
 		}
 
-		fmt.Println("       ", f.Tag("col"))
-		fmt.Println(f.Tag("nncol"))
+		t.Log("       ", f.Tag("col"))
+		t.Log(f.Tag("nncol"))
 
 	}
 	//	NewStructInfo(MyStruct{})

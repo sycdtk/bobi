@@ -14,7 +14,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var once sync.Once
+var onceDB sync.Once
 var Pool *DBPool
 
 type DBPool struct {
@@ -22,7 +22,7 @@ type DBPool struct {
 }
 
 func newDBPool() *DBPool {
-	once.Do(func() {
+	onceDB.Do(func() {
 		pool := map[string]*sql.DB{}
 		Pool = &DBPool{conns: pool}
 	})
@@ -111,4 +111,32 @@ func (p *DBPool) QueryDB(dbName, querySql string, args ...interface{}) [][]sql.R
 	}
 
 	return results
+}
+
+// Execute  "INSERT INTO users(name,age) values(?,?)"
+// UPDATE  "UPDATE users SET age = ? WHERE id = ?"
+// DELETE "DELETE FROM users WHERE id = ?"
+// Create "CREATE TABLE(...)"
+// Drop "DROP TABLE..."
+func (p *DBPool) Execute(execSql string, args ...interface{}) {
+	p.ExecuteDB("default", execSql, args...)
+}
+
+func (p *DBPool) ExecuteDB(dbName, execSql string, args ...interface{}) {
+
+	if db, ok := p.conns[dbName]; ok {
+		stmt, err := db.Prepare(execSql)
+
+		errtools.CheckErr(err, "SQL Prepare失败:", execSql, args)
+
+		result, err := stmt.Exec(args...)
+
+		errtools.CheckErr(err, "SQL 执行失败:", execSql, args)
+
+		lastID, _ := result.LastInsertId()
+
+		affectNum, _ := result.RowsAffected()
+
+		logger.Debug("SQL执行完成：", execSql, args, "，最后插入ID：", lastID, "，受影响行数：", affectNum)
+	}
 }
