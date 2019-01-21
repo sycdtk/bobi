@@ -1,9 +1,10 @@
-package db
+package mapper
 
 import (
 	"testing"
 
 	"github.com/sycdtk/bobi/logger"
+	"github.com/sycdtk/bobi/orm/db"
 )
 
 type Aaa struct {
@@ -13,7 +14,7 @@ type Aaa struct {
 
 func TestWrite(t *testing.T) {
 
-	results := Pool.Query("SELECT id,username FROM test ")
+	results := db.Pool.QueryDB("test2", "SELECT id,username FROM test1 ")
 
 	dataList := Write(func() interface{} { return &Aaa{} }, results, []string{"id", "username"})
 

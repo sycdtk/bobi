@@ -1,12 +1,11 @@
-package db
+package mapper
 
 import (
 	"database/sql"
 	"reflect"
 	"strings"
 	"sync"
-
-	"github.com/sycdtk/bobi/logger"
+	//"github.com/sycdtk/bobi/logger"
 )
 
 var onceCache sync.Once
@@ -66,10 +65,8 @@ func init() {
 func Write(nf func() interface{}, datas [][]sql.RawBytes, dataCol []string) []interface{} {
 	obj := nf()
 	relObjType := reflect.TypeOf(obj)
-	logger.Info(relObjType.PkgPath() + "@" + relObjType.Name())
 	objType, _ := indirect(relObjType)
 	pathName := objType.PkgPath() + "@" + objType.Name()
-	logger.Info(pathName)
 
 	//不在缓存则加入缓存中
 	if !structCache.contains(pathName) {
@@ -82,7 +79,6 @@ func Write(nf func() interface{}, datas [][]sql.RawBytes, dataCol []string) []in
 		ni := nf()
 		niv := reflect.ValueOf(ni)
 		for index, colName := range dataCol {
-			logger.Info(structCache.Get(pathName, colName))
 			reflect.Indirect(niv).FieldByName(structCache.Get(pathName, colName)).SetString(string(data[index]))
 		}
 		dataSet = append(dataSet, ni)
