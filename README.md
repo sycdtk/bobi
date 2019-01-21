@@ -3,7 +3,7 @@
 
 #### config
 	配置文件读写，采用key=value的方式进行保存配置，能够支持分组。logger使用此功能，例如：
-	```
+	
 	[default]
 	path= c:/go
 	version = 1.44
@@ -15,7 +15,7 @@
 	#fdfdfd = fdfdfd    注释整行
 	refer= refer       //注释3
 	somet[hi]ng  = wrong  #注释1
-	```
+
 	
 #### db
 #### expression
