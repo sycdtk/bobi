@@ -65,7 +65,10 @@ func Register(newFn func() interface{}) {
 
 func init() {
 	onceCache.Do(func() {
-		structCache = &StructCache{cacheData: map[string]map[string]string{}, newFuncData: map[string]func() interface{}{}}
+		structCache = &StructCache{
+			cacheData:   map[string]map[string]string{},
+			newFuncData: map[string]func() interface{}{},
+		}
 	})
 }
 
@@ -90,7 +93,6 @@ func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interfac
 	} else {
 		return nil
 	}
-
 }
 
 //判断指针还是引用对象

@@ -20,24 +20,20 @@ func TestWrite(t *testing.T) {
 
 	dataList := Write(&Aaa{}, results, []string{"id", "username"})
 
+	resultList := func(dataList []interface{}) []*Aaa {
+		resultList := []*Aaa{}
+		for _, data := range dataList {
+			if newObj, ok := data.(*Aaa); ok {
+				resultList = append(resultList, newObj)
+			}
+		}
+		return resultList
+	}(dataList)
+
 	logger.Info("==>", len(dataList))
 
-	for _, data := range dataList {
-		if d, ok := data.(*Aaa); ok {
-			logger.Info(d.ID, d.Username)
-		}
-	}
-
-	results = db.QueryDB("test2", "SELECT id,username FROM test1 ")
-	dataList = Write(&Aaa{}, results, []string{"id", "username"})
-
-	logger.Info("==>", len(dataList))
-
-	for _, data := range dataList {
-		if d, ok := data.(*Aaa); ok {
-			logger.Info(d.ID, d.Username)
-		}
-
+	for _, data := range resultList {
+		logger.Info(data.ID, data.Username)
 	}
 
 }
