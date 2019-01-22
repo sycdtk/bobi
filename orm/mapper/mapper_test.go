@@ -14,9 +14,22 @@ type Aaa struct {
 
 func TestWrite(t *testing.T) {
 
-	results := db.Pool.QueryDB("test2", "SELECT id,username FROM test1 ")
+	Register(func() interface{} { return &Aaa{} })
 
-	dataList := Write(func() interface{} { return &Aaa{} }, results, []string{"id", "username"})
+	results := db.QueryDB("test2", "SELECT id,username FROM test1 ")
+
+	dataList := Write(&Aaa{}, results, []string{"id", "username"})
+
+	logger.Info("==>", len(dataList))
+
+	for _, data := range dataList {
+		if d, ok := data.(*Aaa); ok {
+			logger.Info(d.ID, d.Username)
+		}
+	}
+
+	results = db.QueryDB("test2", "SELECT id,username FROM test1 ")
+	dataList = Write(&Aaa{}, results, []string{"id", "username"})
 
 	logger.Info("==>", len(dataList))
 

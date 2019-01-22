@@ -15,25 +15,18 @@ import (
 )
 
 var onceDB sync.Once
-var Pool *DBPool
+var pool *DBPool
 
 type DBPool struct {
 	conns map[string]*sql.DB //多数据库连接池  db名称:数据库连接
 }
 
-func newDBPool() *DBPool {
-	onceDB.Do(func() {
-		pool := map[string]*sql.DB{}
-		Pool = &DBPool{conns: pool}
-	})
-
-	return Pool
-}
-
 //数据库初始化
 func init() {
 
-	newDBPool()
+	onceDB.Do(func() {
+		pool = &DBPool{conns: map[string]*sql.DB{}}
+	})
 
 	dbNames := strings.Split(config.Read("db", "dbName"), ",")
 	defaultDB := config.Read("db", "default")
@@ -62,32 +55,30 @@ func init() {
 		errtools.CheckErr(db.Ping(), "Database "+dbType+" "+dbName+" connection error")
 
 		//加入多源数据库连接
-		Pool.conns[dbName] = db
+		pool.conns[dbName] = db
 
-		logger.Debug(dbName, "init success")
+		logger.Debug("Database:", dbName, "init success")
 
 		//默认数据库
 		if dbName == defaultDB {
-			Pool.conns["default"] = db
+			pool.conns["default"] = db
 		}
 	}
-
 }
 
 // Query  "SELECT * FROM users"
-func (p *DBPool) Query(querySql string, args ...interface{}) [][]sql.RawBytes {
-	return p.QueryDB("default", querySql, args...)
+func Query(querySql string, args ...interface{}) [][]sql.RawBytes {
+	return QueryDB("default", querySql, args...)
 }
 
-func (p *DBPool) QueryDB(dbName, querySql string, args ...interface{}) [][]sql.RawBytes {
+func QueryDB(dbName, querySql string, args ...interface{}) [][]sql.RawBytes {
 
 	var results [][]sql.RawBytes
 
-	if db, ok := p.conns[dbName]; ok {
+	if db, ok := pool.conns[dbName]; ok {
 		rows, err := db.Query(querySql, args...)
-		errtools.CheckErr(err, "SQL 查询失败:", querySql, args)
-
 		defer rows.Close()
+		errtools.CheckErr(err, "SQL 查询失败:", querySql, args)
 
 		cols, err := rows.Columns() // 获取列数
 		errtools.CheckErr(err, "SQL 获取结果失败:", querySql, args)
@@ -107,7 +98,7 @@ func (p *DBPool) QueryDB(dbName, querySql string, args ...interface{}) [][]sql.R
 			results = append(results, rv)
 		}
 
-		logger.Debug("SQL 查询完成：", querySql, args)
+		logger.Debug("SQL Query:", dbName, querySql, args)
 	}
 
 	return results
@@ -118,13 +109,13 @@ func (p *DBPool) QueryDB(dbName, querySql string, args ...interface{}) [][]sql.R
 // DELETE "DELETE FROM users WHERE id = ?"
 // Create "CREATE TABLE(...)"
 // Drop "DROP TABLE..."
-func (p *DBPool) Execute(execSql string, args ...interface{}) {
-	p.ExecuteDB("default", execSql, args...)
+func Execute(execSql string, args ...interface{}) {
+	ExecuteDB("default", execSql, args...)
 }
 
-func (p *DBPool) ExecuteDB(dbName, execSql string, args ...interface{}) {
+func ExecuteDB(dbName, execSql string, args ...interface{}) {
 
-	if db, ok := p.conns[dbName]; ok {
+	if db, ok := pool.conns[dbName]; ok {
 		stmt, err := db.Prepare(execSql)
 
 		errtools.CheckErr(err, "SQL Prepare失败:", execSql, args)
@@ -137,6 +128,6 @@ func (p *DBPool) ExecuteDB(dbName, execSql string, args ...interface{}) {
 
 		affectNum, _ := result.RowsAffected()
 
-		logger.Debug("SQL执行完成：", execSql, args, "，最后插入ID：", lastID, "，受影响行数：", affectNum)
+		logger.Debug("SQL Exec:", dbName, execSql, args, "，最后插入ID：", lastID, "，受影响行数：", affectNum)
 	}
 }
