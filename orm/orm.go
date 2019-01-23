@@ -5,6 +5,10 @@ import (
 	"github.com/sycdtk/bobi/orm/mapper"
 )
 
+func init() {
+
+}
+
 func Query(obj interface{}, sql string, cols []string, args ...interface{}) []interface{} {
 	return QueryDB("default", obj, sql, cols, args...)
 }

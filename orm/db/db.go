@@ -10,6 +10,7 @@ import (
 	"github.com/sycdtk/bobi/errtools"
 	"github.com/sycdtk/bobi/logger"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -130,4 +131,30 @@ func ExecuteDB(dbName, execSql string, args ...interface{}) {
 
 		logger.Debug("SQL Exec:", dbName, execSql, args, "，最后插入ID：", lastID, "，受影响行数：", affectNum)
 	}
+}
+
+//返回数据库是否需要初始化
+func TableExist() map[string]bool {
+
+	dbInitMap := map[string]bool{}
+
+	dbNames := strings.Split(config.Read("db", "dbName"), ",")
+
+	for _, dbName := range dbNames {
+		//数据库类型
+		dbType := config.Read(dbName, "dbType")
+		switch dbType {
+		case "sqlite3":
+			dbInitMap[dbName] = len(QueryDB(dbName, "select name from sqlite_master where type='table' and name=bobi_db_info")) == 0
+		case "postgres":
+			dbInitMap[dbName] = len(QueryDB(dbName, "select relname from pg_class where relname = 'bobi_db_info'")) == 0
+		case "mysql":
+			dbSchema := config.Read(dbName, "dbSchema")
+			dbInitMap[dbName] = len(QueryDB(dbName, "select table_name from information_schema.tables where table_schema=? and table_name ='bobi_db_info'"), dbSchema) == 0
+		default:
+			logger.Info("无需要初始化数据库类型")
+		}
+	}
+
+	return dbInitMap
 }
