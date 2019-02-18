@@ -10,25 +10,38 @@ type Aaa struct {
 	Username string
 }
 
-func indirect(t reflect.Type) (reflect.Type, bool) {
+func indirect(t reflect.Type) reflect.Type {
 	if t.Kind() == reflect.Ptr {
-		return t.Elem(), true
+		return t.Elem()
 	}
-	return t, false
+	return t
+}
+
+func trans(data *Aaa) interface{} {
+	return data
 }
 
 func TMain() {
-	var obj interface{}
-	t, v := indirect(reflect.TypeOf(&Aaa{}))
-	if v {
-		obj = reflect.New(t).Elem().Interface()
-	} else {
-		obj = reflect.New(t).Interface()
+
+	obj := trans(&Aaa{ID: "111"})
+
+	m1t := reflect.TypeOf(obj)
+	nf := m1t.Elem().NumField() //获取字段数量
+	fmt.Println(nf)
+	for i := 0; i < nf; i++ {
+		fmt.Println(m1t.Elem().Field(i).Name) //输出字段名称
 	}
 
-	vv := reflect.ValueOf(obj)
-	vv.Elem().FieldByName("ID").SetString("1234")
+	fmt.Println("----------")
 
-	fmt.Println(obj.(Aaa).ID)
-	fmt.Println(obj.(Aaa).Username)
+	m1v := reflect.ValueOf(obj)
+
+	for i := 0; i < nf; i++ {
+		fmt.Println(reflect.Indirect(m1v).FieldByName(indirect(m1t).Field(i).Name)) //获取字段值
+	}
+
+	a := &Aaa{ID: "x11", Username: "lirui"}
+
+	b := make([]interface{}, 10)
+	b = append(b, a)
 }

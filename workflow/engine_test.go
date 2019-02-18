@@ -1,18 +1,19 @@
 package workflow
 
 import (
+	"encoding/json"
 	"strconv"
+
 	//"strings"
 	"testing"
 
+	"github.com/sycdtk/bobi/errtools"
 	"github.com/sycdtk/bobi/random"
 	. "github.com/sycdtk/bobi/workflow/model"
 )
 
 //顺序提交
 func TestLoadAndRunSeq(t *testing.T) {
-
-	engine := NewEngine()
 
 	//流程定义解析、构建过程
 	//1、建立流程定义
@@ -39,34 +40,33 @@ func TestLoadAndRunSeq(t *testing.T) {
 	pd.Entrance = n0.ID
 
 	//5、流程定义存入引擎
-	engine.setProcess(pd, []*Node{n0, n1, n2, n3}, []*Line{l1, l2, l3})
+	WFEngine.setProcess(pd, []*Node{n0, n1, n2, n3}, []*Line{l1, l2, l3})
 
-	showDef(t, engine, pd)
+	showDef(t, pd)
 
 	//启动流程
-	pi := engine.Start(pd.ID)
+	pi := WFEngine.Start(pd.ID)
 	pi.Data["data1"] = "aa"
 	pi.Data["data2"] = "aa1,bb,cc,aa"
 
-	showSubmit(t, engine, pi, n0.ID, 1, "开始 -> 步骤1")
+	showSubmit(t, pi, n0.ID, 1, "开始 -> 步骤1")
 
-	showSubmit(t, engine, pi, n1.ID, 2, "步骤1 -> 步骤2")
+	showSubmit(t, pi, n1.ID, 2, "步骤1 -> 步骤2")
 
-	showSubmit(t, engine, pi, n1.ID, 3, "重复提交 步骤1 -> 步骤2")
+	showSubmit(t, pi, n1.ID, 3, "重复提交 步骤1 -> 步骤2")
 
-	showSubmit(t, engine, pi, n2.ID, 4, "步骤2 -> 结束")
+	showSubmit(t, pi, n2.ID, 4, "步骤2 -> 结束")
 
-	showSubmit(t, engine, pi, n2.ID, 5, "重复提交 步骤2 -> 结束")
+	showSubmit(t, pi, n2.ID, 5, "重复提交 步骤2 -> 结束")
 
-	showSubmit(t, engine, pi, n3.ID, 6, "结束 ->")
+	showSubmit(t, pi, n3.ID, 6, "结束 ->")
 
-	showSubmit(t, engine, pi, n3.ID, 7, "重复提交 结束 ->")
+	showSubmit(t, pi, n3.ID, 7, "重复提交 结束 ->")
 
 }
 
 //并行流程
 func TestLoadAndRunParallel1(t *testing.T) {
-	engine := NewEngine()
 
 	//流程定义解析、构建过程
 	//1、建立流程定义
@@ -98,36 +98,35 @@ func TestLoadAndRunParallel1(t *testing.T) {
 	pd.Entrance = n1.ID
 
 	//5、流程定义存入引擎
-	engine.setProcess(pd, []*Node{n1, n2, n3, n4, n5, n6}, []*Line{l1, l2, l3, l4, l5, l6})
+	WFEngine.setProcess(pd, []*Node{n1, n2, n3, n4, n5, n6}, []*Line{l1, l2, l3, l4, l5, l6})
 
-	showDef(t, engine, pd)
+	showDef(t, pd)
 
 	//启动流程
-	pi := engine.Start(pd.ID)
+	pi := WFEngine.Start(pd.ID)
 
-	showSubmit(t, engine, pi, n1.ID, 1, "开始 -> 步骤1")
+	showSubmit(t, pi, n1.ID, 1, "开始 -> 步骤1")
 
-	showSubmit(t, engine, pi, n2.ID, 2, "步骤1 -> 并行步骤A、并行步骤B")
+	showSubmit(t, pi, n2.ID, 2, "步骤1 -> 并行步骤A、并行步骤B")
 
-	showSubmit(t, engine, pi, n2.ID, 3, "重复提交 步骤1 -> 并行步骤A、并行步骤B")
+	showSubmit(t, pi, n2.ID, 3, "重复提交 步骤1 -> 并行步骤A、并行步骤B")
 
-	showSubmit(t, engine, pi, n3.ID, 4, "并行步骤A -> 步骤2")
+	showSubmit(t, pi, n3.ID, 4, "并行步骤A -> 步骤2")
 
-	showSubmit(t, engine, pi, n3.ID, 5, "重复提交 并行步骤A -> 步骤2")
+	showSubmit(t, pi, n3.ID, 5, "重复提交 并行步骤A -> 步骤2")
 
-	showSubmit(t, engine, pi, n4.ID, 6, "并行步骤B -> 步骤2")
+	showSubmit(t, pi, n4.ID, 6, "并行步骤B -> 步骤2")
 
-	showSubmit(t, engine, pi, n4.ID, 7, "重复提交 并行步骤B -> 步骤2")
+	showSubmit(t, pi, n4.ID, 7, "重复提交 并行步骤B -> 步骤2")
 
-	showSubmit(t, engine, pi, n5.ID, 8, "步骤2 -> 结束")
+	showSubmit(t, pi, n5.ID, 8, "步骤2 -> 结束")
 
-	showSubmit(t, engine, pi, n6.ID, 9, "结束 -> ")
+	showSubmit(t, pi, n6.ID, 9, "结束 -> ")
 
 }
 
 //分支流程
 func TestLoadAndRunParallel2(t *testing.T) {
-	engine := NewEngine()
 
 	//流程定义解析、构建过程
 	//1、建立流程定义
@@ -159,38 +158,37 @@ func TestLoadAndRunParallel2(t *testing.T) {
 	pd.Entrance = n1.ID
 
 	//5、流程定义存入引擎
-	engine.setProcess(pd, []*Node{n1, n2, n3, n4, n5, n6}, []*Line{l1, l2, l3, l4, l5, l6})
+	WFEngine.setProcess(pd, []*Node{n1, n2, n3, n4, n5, n6}, []*Line{l1, l2, l3, l4, l5, l6})
 
-	showDef(t, engine, pd)
+	showDef(t, pd)
 
 	//启动流程
-	pi := engine.Start(pd.ID)
+	pi := WFEngine.Start(pd.ID)
 
 	pi.Data["data1"] = "cc"
 
-	showSubmit(t, engine, pi, n1.ID, 1, "开始 -> 步骤1")
+	showSubmit(t, pi, n1.ID, 1, "开始 -> 步骤1")
 
-	showSubmit(t, engine, pi, n2.ID, 2, "步骤1 -> 并行步骤A、并行步骤B")
+	showSubmit(t, pi, n2.ID, 2, "步骤1 -> 并行步骤A、并行步骤B")
 
-	showSubmit(t, engine, pi, n2.ID, 3, "重复提交 步骤1 -> 并行步骤A、并行步骤B")
+	showSubmit(t, pi, n2.ID, 3, "重复提交 步骤1 -> 并行步骤A、并行步骤B")
 
-	showSubmit(t, engine, pi, n3.ID, 4, "并行步骤A -> 步骤2")
+	showSubmit(t, pi, n3.ID, 4, "并行步骤A -> 步骤2")
 
-	showSubmit(t, engine, pi, n3.ID, 5, "重复提交 并行步骤A -> 步骤2")
+	showSubmit(t, pi, n3.ID, 5, "重复提交 并行步骤A -> 步骤2")
 
-	showSubmit(t, engine, pi, n4.ID, 6, "并行步骤B -> 步骤2")
+	showSubmit(t, pi, n4.ID, 6, "并行步骤B -> 步骤2")
 
-	showSubmit(t, engine, pi, n4.ID, 7, "重复提交 并行步骤B -> 步骤2")
+	showSubmit(t, pi, n4.ID, 7, "重复提交 并行步骤B -> 步骤2")
 
-	showSubmit(t, engine, pi, n5.ID, 8, "步骤2 -> 结束")
+	showSubmit(t, pi, n5.ID, 8, "步骤2 -> 结束")
 
-	showSubmit(t, engine, pi, n6.ID, 9, "结束 -> ")
+	showSubmit(t, pi, n6.ID, 9, "结束 -> ")
 
 }
 
 //分支流程
 func TestLoadAndRunParallel3(t *testing.T) {
-	engine := NewEngine()
 
 	//流程定义解析、构建过程
 	//1、建立流程定义
@@ -222,39 +220,39 @@ func TestLoadAndRunParallel3(t *testing.T) {
 	pd.Entrance = n1.ID
 
 	//5、流程定义存入引擎
-	engine.setProcess(pd, []*Node{n1, n2, n3, n4, n5, n6}, []*Line{l1, l2, l3, l4, l5, l6})
+	WFEngine.setProcess(pd, []*Node{n1, n2, n3, n4, n5, n6}, []*Line{l1, l2, l3, l4, l5, l6})
 
-	showDef(t, engine, pd)
+	showDef(t, pd)
 
 	//启动流程
-	pi := engine.Start(pd.ID)
+	pi := WFEngine.Start(pd.ID)
 
 	pi.Data["data1"] = "cc"
 
-	showSubmit(t, engine, pi, n1.ID, 1, "开始 -> 步骤1")
+	showSubmit(t, pi, n1.ID, 1, "开始 -> 步骤1")
 
-	showSubmit(t, engine, pi, n2.ID, 2, "步骤1 -> 并行步骤A、并行步骤B")
+	showSubmit(t, pi, n2.ID, 2, "步骤1 -> 并行步骤A、并行步骤B")
 
-	showSubmit(t, engine, pi, n2.ID, 3, "重复提交 步骤1 -> 并行步骤A、并行步骤B")
+	showSubmit(t, pi, n2.ID, 3, "重复提交 步骤1 -> 并行步骤A、并行步骤B")
 
-	showSubmit(t, engine, pi, n3.ID, 4, "并行步骤A -> 步骤2")
+	showSubmit(t, pi, n3.ID, 4, "并行步骤A -> 步骤2")
 
-	showSubmit(t, engine, pi, n3.ID, 5, "重复提交 并行步骤A -> 步骤2")
+	showSubmit(t, pi, n3.ID, 5, "重复提交 并行步骤A -> 步骤2")
 
-	showSubmit(t, engine, pi, n4.ID, 6, "并行步骤B -> 步骤2")
+	showSubmit(t, pi, n4.ID, 6, "并行步骤B -> 步骤2")
 
-	showSubmit(t, engine, pi, n4.ID, 7, "重复提交 并行步骤B -> 步骤2")
+	showSubmit(t, pi, n4.ID, 7, "重复提交 并行步骤B -> 步骤2")
 
-	showSubmit(t, engine, pi, n5.ID, 8, "步骤2 -> 结束")
+	showSubmit(t, pi, n5.ID, 8, "步骤2 -> 结束")
 
-	showSubmit(t, engine, pi, n6.ID, 9, "结束 -> ")
+	showSubmit(t, pi, n6.ID, 9, "结束 -> ")
 
 }
 
-func showDef(t *testing.T, engine *Engine, pd *ProcessDef) {
+func showDef(t *testing.T, pd *ProcessDef) {
 	t.Log("==============================流程定义：" + pd.Name + "\n")
 	//	输出信息
-	if p, ok := engine.nodes[pd.ID]; ok {
+	if p, ok := WFEngine.nodes[pd.ID]; ok {
 		for _, n := range p {
 			t.Log("节点", n.ID, n.Name)
 			for _, r := range n.From {
@@ -270,13 +268,21 @@ func showDef(t *testing.T, engine *Engine, pd *ProcessDef) {
 	t.Log("\n")
 }
 
-func showSubmit(t *testing.T, engine *Engine, pi *ProcessInst, nodeId string, num int, name string) {
+func TestJson(t *testing.T) {
+	for _, v := range WFEngine.processDefs {
+		jsonStr, err := json.Marshal(v)
+		errtools.CheckErr(err)
+		t.Log(string(jsonStr))
+	}
+}
+
+func showSubmit(t *testing.T, pi *ProcessInst, nodeId string, num int, name string) {
 	t.Log("==============================第" + strconv.Itoa(num) + "提交:" + name)
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log(ni.Name)
 	}
 	t.Log("------------------------------")
-	engine.Submit(pi.ID, nodeId)
+	WFEngine.Submit(pi.ID, nodeId)
 	for _, ni := range pi.Token.AllNodeInst() {
 		t.Log(ni.Name)
 	}

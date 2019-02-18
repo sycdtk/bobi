@@ -11,6 +11,8 @@ type Aaa struct {
 
 func TestQuery(t *testing.T) {
 
+	Register(func() interface{} { return &Aaa{} })
+
 	finalData := []*Aaa{}
 	list := Query(&Aaa{}, "select id,username from test1", []string{"id", "username"})
 	for _, data := range list {
@@ -22,4 +24,12 @@ func TestQuery(t *testing.T) {
 	for _, data := range finalData {
 		t.Log(data.ID, data.Username)
 	}
+}
+
+func TestTableExist(t *testing.T) {
+	dbInitMap := TableExist()
+	if dbInitMap["test2"] {
+		t.Log("Need Init DB!")
+	}
+
 }

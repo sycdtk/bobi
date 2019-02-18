@@ -58,7 +58,7 @@ func init() {
 		//加入多源数据库连接
 		pool.conns[dbName] = db
 
-		logger.Debug("Database:", dbName, "init success")
+		logger.Info("DB", dbName, ":", "conn success")
 
 		//默认数据库
 		if dbName == defaultDB {
@@ -99,7 +99,7 @@ func QueryDB(dbName, querySql string, args ...interface{}) [][]sql.RawBytes {
 			results = append(results, rv)
 		}
 
-		logger.Debug("SQL Query:", dbName, querySql, args)
+		logger.Debug("DB", dbName, ":", querySql, args)
 	}
 
 	return results
@@ -129,32 +129,6 @@ func ExecuteDB(dbName, execSql string, args ...interface{}) {
 
 		affectNum, _ := result.RowsAffected()
 
-		logger.Debug("SQL Exec:", dbName, execSql, args, "，最后插入ID：", lastID, "，受影响行数：", affectNum)
+		logger.Debug("DB", dbName, ":", execSql, args, "，最后插入ID：", lastID, "，受影响行数：", affectNum)
 	}
-}
-
-//返回数据库是否需要初始化
-func TableExist() map[string]bool {
-
-	dbInitMap := map[string]bool{}
-
-	dbNames := strings.Split(config.Read("db", "dbName"), ",")
-
-	for _, dbName := range dbNames {
-		//数据库类型
-		dbType := config.Read(dbName, "dbType")
-		switch dbType {
-		case "sqlite3":
-			dbInitMap[dbName] = len(QueryDB(dbName, "select name from sqlite_master where type='table' and name=bobi_db_info")) == 0
-		case "postgres":
-			dbInitMap[dbName] = len(QueryDB(dbName, "select relname from pg_class where relname = 'bobi_db_info'")) == 0
-		case "mysql":
-			dbSchema := config.Read(dbName, "dbSchema")
-			dbInitMap[dbName] = len(QueryDB(dbName, "select table_name from information_schema.tables where table_schema=? and table_name ='bobi_db_info'"), dbSchema) == 0
-		default:
-			logger.Info("无需要初始化数据库类型")
-		}
-	}
-
-	return dbInitMap
 }

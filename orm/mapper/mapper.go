@@ -5,14 +5,20 @@ import (
 	"reflect"
 	"strings"
 	"sync"
-	//"github.com/sycdtk/bobi/logger"
+
+	"github.com/sycdtk/bobi/logger"
 )
+
+const tablePrefix = "bobi"
 
 var onceCache sync.Once
 var structCache *StructCache //结构体字段小写与原Name映射关系缓存
 
 //结构体映射缓存
 type StructCache struct {
+	//表名将以@tablename保存
+	//objType.PkgPath()+"@"+objType.Name():@tablename name:table name
+	//字段名已字段的小写字符保存
 	//objType.PkgPath()+"@"+objType.Name():lower field name:fieldName
 	cacheData map[string]map[string]string
 	//objType.PkgPath()+"@"+objType.Name(): new Object function
@@ -36,7 +42,9 @@ func (sc *StructCache) contains(pathName string) bool {
 }
 
 //增加字段名称、新建函数映射缓存
-func Register(newFn func() interface{}) {
+//modelName 模块名称缩写，用以设置表名中缀，bobi_wf_mapper_aaa,其中wf为模块名称：workflow
+//newFn 实例新建函数
+func Register(modelName string, newFn func() interface{}) {
 
 	obj := newFn()
 
@@ -60,7 +68,11 @@ func Register(newFn func() interface{}) {
 		}
 	}
 
+	data["@tablename"] = tablePrefix + "_" + modelName + "_" + strings.ToLower(objType.Name())
+
 	structCache.cacheData[objType.PkgPath()+"@"+objType.Name()] = data
+
+	logger.Info("DB", ":", objType.PkgPath()+"@"+objType.Name(), "registered")
 }
 
 func init() {
@@ -72,13 +84,48 @@ func init() {
 	})
 }
 
+//创建持久化对象
+func Create(objs []interface{}, dataCol []string) {
+	if len(objs) > 0 {
+
+		objType, _ := indirect(reflect.TypeOf(objs[0]))
+		pathName := objType.PkgPath() + "@" + objType.Name()
+		//不在缓存则返回nil
+		if structCache.contains(pathName) {
+
+			//构建插入sql insert into
+			createSQL := "insert into " + structCache.get(pathName, "@tablename") + " ("
+
+			for _, colName := range dataCol {
+				createSQL = createSQL + colName + ","
+			}
+
+			createSQL = strings.TrimSuffix(createSQL, ",") + ") values "
+
+			for _, obj := range objs {
+				niv := reflect.ValueOf(obj)
+				createSQL = createSQL + "("
+				for _, colName := range dataCol {
+					c := structCache.get(pathName, colName)
+					createSQL = createSQL + "'" + reflect.Indirect(niv).FieldByName(c).String() + "',"
+				}
+				createSQL = strings.TrimSuffix(createSQL, ",") + "),"
+			}
+
+			createSQL = strings.TrimSuffix(createSQL, ",") + ";"
+
+			logger.Debug(createSQL)
+		}
+	}
+}
+
 //写入数据,传入结构体指针
 func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interface{} {
 
 	objType, _ := indirect(reflect.TypeOf(obj))
 	pathName := objType.PkgPath() + "@" + objType.Name()
 
-	//不在缓存则加入缓存中
+	//不在缓存则返回nil
 	if structCache.contains(pathName) {
 		dataSet := []interface{}{}
 		for _, data := range datas {

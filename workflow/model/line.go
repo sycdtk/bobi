@@ -26,3 +26,13 @@ func NewLine(Name, From, To, RuleStr string) *Line {
 		},
 	}
 }
+
+func MakeList(datas []interface{}) []*Line {
+	finalDatas := []*Line{}
+	for _, data := range datas {
+		if dataObj, ok := data.(*Line); ok {
+			finalDatas = append(finalDatas, dataObj)
+		}
+	}
+	return finalDatas
+}
