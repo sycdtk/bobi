@@ -84,10 +84,9 @@ func init() {
 	})
 }
 
-//创建持久化对象
+//创建持久化对象 objs:持久化对象   dataCol:持久化的列
 func Create(objs []interface{}, dataCol []string) {
-	if len(objs) > 0 {
-
+	if len(objs) > 0 && len(dataCol) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
 		//不在缓存则返回nil
@@ -117,6 +116,90 @@ func Create(objs []interface{}, dataCol []string) {
 			logger.Debug(createSQL)
 		}
 	}
+}
+
+//删除持久化对象	objs:持久化对象	whereDataCol:where条件
+func Delete(objs []interface{}, whereDataCol []string) {
+	if len(objs) > 0 && len(whereDataCol) > 0 {
+		objType, _ := indirect(reflect.TypeOf(objs[0]))
+		pathName := objType.PkgPath() + "@" + objType.Name()
+		//不在缓存则返回nil
+		if structCache.contains(pathName) {
+			//构建插入sql delete
+			deleteSQL := ""
+			deleteSQLPrefix := "delete from " + structCache.get(pathName, "@tablename") + " where 1=1"
+
+			for _, obj := range objs {
+				niv := reflect.ValueOf(obj)
+				deleteSQL = deleteSQL + deleteSQLPrefix
+
+				for _, colName := range whereDataCol {
+					c := structCache.get(pathName, colName)
+					deleteSQL = deleteSQL + " and " + colName + "='" + reflect.Indirect(niv).FieldByName(c).String() + "'"
+				}
+
+				deleteSQL = deleteSQL + ";"
+			}
+			logger.Debug(deleteSQL)
+		}
+	}
+}
+
+//基于ID删除持久化对象	objs 删除的持久化对象，需要包含ID字段及值
+func DeleteByID(objs []interface{}) {
+	if len(objs) > 0 {
+		objType, _ := indirect(reflect.TypeOf(objs[0]))
+		pathName := objType.PkgPath() + "@" + objType.Name()
+		//不在缓存则返回nil
+		if structCache.contains(pathName) {
+			//构建插入sql delete
+			deleteSQL := "delete from " + structCache.get(pathName, "@tablename") + " where id in ("
+
+			for _, obj := range objs {
+				niv := reflect.ValueOf(obj)
+				deleteSQL = deleteSQL + "'" + reflect.Indirect(niv).FieldByName("ID").String() + "',"
+			}
+			deleteSQL = strings.TrimSuffix(deleteSQL, ",") + ");"
+
+			logger.Debug(deleteSQL)
+		}
+	}
+}
+
+//修改持久化对象	objs：需要更新的持久化对象  dataCol：持久化列 whereDataCol：where条件
+func Update(objs []interface{}, dataCol []string, whereDataCol []string) {
+	if len(objs) > 0 && len(dataCol) > 0 && len(whereDataCol) > 0 {
+		objType, _ := indirect(reflect.TypeOf(objs[0]))
+		pathName := objType.PkgPath() + "@" + objType.Name()
+		//不在缓存则返回nil
+		if structCache.contains(pathName) {
+
+			//构建插入sql update
+			updateSQL := ""
+
+			for _, obj := range objs {
+				updateSQL = updateSQL + "update " + structCache.get(pathName, "@tablename") + " set "
+				niv := reflect.ValueOf(obj)
+				for _, colName := range dataCol {
+					c := structCache.get(pathName, colName)
+					updateSQL = updateSQL + colName + "='" + reflect.Indirect(niv).FieldByName(c).String() + "',"
+				}
+				updateSQL = strings.TrimSuffix(updateSQL, ",") + " where 1=1"
+
+				for _, colName := range whereDataCol {
+					c := structCache.get(pathName, colName)
+					updateSQL = updateSQL + " and " + colName + "='" + reflect.Indirect(niv).FieldByName(c).String() + "'"
+				}
+				updateSQL = updateSQL + ";"
+			}
+
+			logger.Debug(updateSQL)
+		}
+	}
+}
+
+func Query(objs []interface{}, whereDataCol []string) {
+
 }
 
 //写入数据,传入结构体指针

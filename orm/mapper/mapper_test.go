@@ -45,3 +45,33 @@ func TestCreate(t *testing.T) {
 
 	Create([]interface{}{&Aaa{ID: "x11", Username: "lirui"}, &Aaa{ID: "x22", Username: "qingdao"}}, []string{"id", "username"})
 }
+
+func TestDelete(t *testing.T) {
+	Register("test", func() interface{} { return &Aaa{} })
+
+	Delete([]interface{}{&Aaa{ID: "x11", Username: "lirui"}}, []string{"id"})
+
+	Delete([]interface{}{&Aaa{ID: "x11", Username: "lirui"}}, []string{"id", "username"})
+
+	Delete([]interface{}{&Aaa{ID: "x11", Username: "lirui"}, &Aaa{ID: "x22", Username: "qingdao"}}, []string{"id", "username"})
+
+}
+
+func TestDeleteByID(t *testing.T) {
+	Register("test", func() interface{} { return &Aaa{} })
+
+	DeleteByID([]interface{}{&Aaa{ID: "x11", Username: "lirui"}})
+
+	DeleteByID([]interface{}{&Aaa{ID: "x11", Username: "lirui"}})
+
+	DeleteByID([]interface{}{&Aaa{ID: "x11", Username: "lirui"}, &Aaa{ID: "x22", Username: "qingdao"}})
+
+}
+
+func TestUpdate(t *testing.T) {
+	Register("test", func() interface{} { return &Aaa{} })
+
+	Update([]interface{}{&Aaa{ID: "x11", Username: "lirui"}}, []string{"username"}, []string{"id"})
+
+	Update([]interface{}{&Aaa{ID: "x11", Username: "lirui"}, &Aaa{ID: "x22", Username: "qingdao"}}, []string{"username"}, []string{"id"})
+}
