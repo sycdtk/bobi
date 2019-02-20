@@ -56,6 +56,9 @@ func TestDB(t *testing.T) {
 	t.Log("----------")
 	ExecuteDB("test2", "insert into test1(id,username) values(3,'guojia'),(4,'liubei')")
 
+	//不支持多条删除
+	//ExecuteDB("test2", "delete from test1 where id=3;delete from test1 where id=4;")
+
 	results = QueryDB("test2", "SELECT id,username FROM test1 ")
 
 	for _, row := range results {

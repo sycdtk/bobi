@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/sycdtk/bobi/logger"
+	"github.com/sycdtk/bobi/orm/db"
 )
 
 const tablePrefix = "bobi"
@@ -86,6 +87,11 @@ func init() {
 
 //创建持久化对象 objs:持久化对象   dataCol:持久化的列
 func Create(objs []interface{}, dataCol []string) {
+	CreateForDB("default", objs, dataCol)
+}
+
+//创建持久化对象 dbName:数据库名称 objs:持久化对象   dataCol:持久化的列
+func CreateForDB(dbName string, objs []interface{}, dataCol []string) {
 	if len(objs) > 0 && len(dataCol) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
@@ -113,25 +119,31 @@ func Create(objs []interface{}, dataCol []string) {
 
 			createSQL = strings.TrimSuffix(createSQL, ",") + ";"
 
-			logger.Debug(createSQL)
+			//logger.Debug(createSQL)
+
+			db.ExecuteDB(dbName, createSQL)
 		}
 	}
 }
 
 //删除持久化对象	objs:持久化对象	whereDataCol:where条件
 func Delete(objs []interface{}, whereDataCol []string) {
+	DeleteForDB("default", objs, whereDataCol)
+}
+
+//删除持久化对象	dbName:数据库名称 objs:持久化对象	whereDataCol:where条件
+func DeleteForDB(dbName string, objs []interface{}, whereDataCol []string) {
 	if len(objs) > 0 && len(whereDataCol) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
 		//不在缓存则返回nil
 		if structCache.contains(pathName) {
 			//构建插入sql delete
-			deleteSQL := ""
 			deleteSQLPrefix := "delete from " + structCache.get(pathName, "@tablename") + " where 1=1"
 
 			for _, obj := range objs {
 				niv := reflect.ValueOf(obj)
-				deleteSQL = deleteSQL + deleteSQLPrefix
+				deleteSQL := deleteSQLPrefix
 
 				for _, colName := range whereDataCol {
 					c := structCache.get(pathName, colName)
@@ -139,14 +151,23 @@ func Delete(objs []interface{}, whereDataCol []string) {
 				}
 
 				deleteSQL = deleteSQL + ";"
+
+				//logger.Debug(deleteSQL)
+
+				db.ExecuteDB(dbName, deleteSQL)
 			}
-			logger.Debug(deleteSQL)
+
 		}
 	}
 }
 
-//基于ID删除持久化对象	objs 删除的持久化对象，需要包含ID字段及值
+//基于ID删除持久化对象 objs:删除的持久化对象，需要包含ID字段及值
 func DeleteByID(objs []interface{}) {
+	DeleteByIDForDB("default", objs)
+}
+
+//基于ID删除持久化对象	dbName:数据库名称 objs:删除的持久化对象，需要包含ID字段及值
+func DeleteByIDForDB(dbName string, objs []interface{}) {
 	if len(objs) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
@@ -161,13 +182,20 @@ func DeleteByID(objs []interface{}) {
 			}
 			deleteSQL = strings.TrimSuffix(deleteSQL, ",") + ");"
 
-			logger.Debug(deleteSQL)
+			//logger.Debug(deleteSQL)
+
+			db.ExecuteDB(dbName, deleteSQL)
 		}
 	}
 }
 
 //修改持久化对象	objs：需要更新的持久化对象  dataCol：持久化列 whereDataCol：where条件
 func Update(objs []interface{}, dataCol []string, whereDataCol []string) {
+	UpdateForDB("default", objs, dataCol, whereDataCol)
+}
+
+//修改持久化对象	dbName:数据库名称 objs：需要更新的持久化对象  dataCol：持久化列 whereDataCol：where条件
+func UpdateForDB(dbName string, objs []interface{}, dataCol []string, whereDataCol []string) {
 	if len(objs) > 0 && len(dataCol) > 0 && len(whereDataCol) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
@@ -175,10 +203,10 @@ func Update(objs []interface{}, dataCol []string, whereDataCol []string) {
 		if structCache.contains(pathName) {
 
 			//构建插入sql update
-			updateSQL := ""
+			deleteSQLPrefix := "update " + structCache.get(pathName, "@tablename") + " set "
 
 			for _, obj := range objs {
-				updateSQL = updateSQL + "update " + structCache.get(pathName, "@tablename") + " set "
+				updateSQL := deleteSQLPrefix
 				niv := reflect.ValueOf(obj)
 				for _, colName := range dataCol {
 					c := structCache.get(pathName, colName)
@@ -191,9 +219,11 @@ func Update(objs []interface{}, dataCol []string, whereDataCol []string) {
 					updateSQL = updateSQL + " and " + colName + "='" + reflect.Indirect(niv).FieldByName(c).String() + "'"
 				}
 				updateSQL = updateSQL + ";"
-			}
 
-			logger.Debug(updateSQL)
+				//logger.Debug(updateSQL)
+
+				db.ExecuteDB(dbName, updateSQL)
+			}
 		}
 	}
 }
