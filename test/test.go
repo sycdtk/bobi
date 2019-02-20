@@ -6,7 +6,7 @@ import (
 )
 
 type Aaa struct {
-	ID       string
+	ID       string `ft:"aaa";ft1:"bb"`
 	Username string
 }
 
@@ -23,25 +23,11 @@ func trans(data *Aaa) interface{} {
 
 func TMain() {
 
-	obj := trans(&Aaa{ID: "111"})
+	obj := &Aaa{ID: "111"}
 
-	m1t := reflect.TypeOf(obj)
-	nf := m1t.Elem().NumField() //获取字段数量
-	fmt.Println(nf)
-	for i := 0; i < nf; i++ {
-		fmt.Println(m1t.Elem().Field(i).Name) //输出字段名称
-	}
+	objType := indirect(reflect.TypeOf(obj))
 
-	fmt.Println("----------")
+	fmt.Println("-->", objType.Field(0).Tag.Get("ft"))
+	fmt.Println("-->", objType.Field(0).Tag.Get("ft1"))
 
-	m1v := reflect.ValueOf(obj)
-
-	for i := 0; i < nf; i++ {
-		fmt.Println(reflect.Indirect(m1v).FieldByName(indirect(m1t).Field(i).Name)) //获取字段值
-	}
-
-	a := &Aaa{ID: "x11", Username: "lirui"}
-
-	b := make([]interface{}, 10)
-	b = append(b, a)
 }

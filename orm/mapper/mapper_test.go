@@ -8,8 +8,18 @@ import (
 )
 
 type Aaa struct {
-	ID       string
+	ID       string `ft:"aa"`
 	Username string
+}
+
+func TestRegister(t *testing.T) {
+	Register("orm", func() interface{} { return &Aaa{} })
+
+	for k1, v1 := range structCache.cacheTag {
+		for k2, v2 := range v1 {
+			logger.Info("--->", k1, k2, v2)
+		}
+	}
 }
 
 func TestWrite(t *testing.T) {

@@ -22,6 +22,8 @@ type StructCache struct {
 	//字段名已字段的小写字符保存
 	//objType.PkgPath()+"@"+objType.Name():lower field name:fieldName
 	cacheData map[string]map[string]string
+	//objType.PkgPath()+"@"+objType.Name():lower field name:tag `ft`
+	cacheTag map[string]map[string]string
 	//objType.PkgPath()+"@"+objType.Name(): new Object function
 	newFuncData map[string]func() interface{}
 }
@@ -57,14 +59,19 @@ func Register(modelName string, newFn func() interface{}) {
 
 	//字段映射加入缓存
 	data := map[string]string{}
+	tag := map[string]string{}
 	for i := 0; i < objType.NumField(); i++ {
 		if isIndirect {
 			if objValue.Elem().FieldByName(objType.Field(i).Name).CanSet() {
 				data[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Name
+				//ft:filed type
+				tag[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Tag.Get("ft")
 			}
 		} else {
 			if objValue.FieldByName(objType.Field(i).Name).CanSet() {
 				data[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Name
+				//ft:filed type
+				tag[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Tag.Get("ft")
 			}
 		}
 	}
@@ -73,6 +80,8 @@ func Register(modelName string, newFn func() interface{}) {
 
 	structCache.cacheData[objType.PkgPath()+"@"+objType.Name()] = data
 
+	structCache.cacheTag[objType.PkgPath()+"@"+objType.Name()] = tag
+
 	logger.Info("DB", ":", objType.PkgPath()+"@"+objType.Name(), "registered")
 }
 
@@ -80,6 +89,7 @@ func init() {
 	onceCache.Do(func() {
 		structCache = &StructCache{
 			cacheData:   map[string]map[string]string{},
+			cacheTag:    map[string]map[string]string{},
 			newFuncData: map[string]func() interface{}{},
 		}
 	})
