@@ -27,9 +27,9 @@ func TestWrite(t *testing.T) {
 
 	Register("orm", func() interface{} { return &Aaa{} })
 
-	results := db.Query("SELECT id,username,birth,age FROM bobi_test_aaa ")
+	results := db.Query("SELECT id,username,birth,age,sex,xxx,yyy FROM bobi_test_aaa ")
 
-	dataList := Write(&Aaa{}, results, []string{"id", "username", "birth", "age"})
+	dataList := Write(&Aaa{}, results, []string{"id", "username", "birth", "age", "sex", "xxx", "yyy"})
 
 	resultList := func(dataList []interface{}) []*Aaa {
 		resultList := []*Aaa{}

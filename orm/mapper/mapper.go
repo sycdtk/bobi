@@ -297,17 +297,37 @@ func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interfac
 				case "string":
 					reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetString(string(data[index]))
 				case "int":
-					if dataValue, err := strconv.Atoi(string(data[index])); err == nil {
-						reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetInt(int64(dataValue))
-					} else {
-						praseStatus = false
+					if len(data[index]) > 0 {
+						if dataValue, err := strconv.Atoi(string(data[index])); err == nil {
+							reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetInt(int64(dataValue))
+						} else {
+							logger.Err(err.Error())
+						}
 					}
 				case "bool":
-					//reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetBool(bool(data[index]))
+					if len(data[index]) > 0 {
+						if dataValue, err := strconv.ParseBool(string(data[index])); err == nil {
+							reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetBool(dataValue)
+						} else {
+							logger.Err(err.Error())
+						}
+					}
 				case "float32":
-					//reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetFloat(float32(data[index]))
+					if len(data[index]) > 0 {
+						if dataValue, err := strconv.ParseFloat(string(data[index]), 64); err == nil {
+							reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetFloat(dataValue)
+						} else {
+							logger.Err(err.Error())
+						}
+					}
 				case "float64":
-					//reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetFloat(float64(data[index]))
+					if len(data[index]) > 0 {
+						if dataValue, err := strconv.ParseFloat(string(data[index]), 64); err == nil {
+							reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetFloat(dataValue)
+						} else {
+							logger.Err(err.Error())
+						}
+					}
 				default:
 					praseStatus = false
 				}
