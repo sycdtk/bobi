@@ -3,6 +3,7 @@ package mapper
 import (
 	"database/sql"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -22,8 +23,6 @@ type StructCache struct {
 	//字段名已字段的小写字符保存
 	//objType.PkgPath()+"@"+objType.Name():lower field name:fieldName
 	cacheData map[string]map[string]string
-	//objType.PkgPath()+"@"+objType.Name():lower field name:tag `ft`
-	cacheTag map[string]map[string]string
 	//objType.PkgPath()+"@"+objType.Name(): new Object function
 	newFuncData map[string]func() interface{}
 }
@@ -59,19 +58,19 @@ func Register(modelName string, newFn func() interface{}) {
 
 	//字段映射加入缓存
 	data := map[string]string{}
-	tag := map[string]string{}
+	//tag := map[string]string{}
 	for i := 0; i < objType.NumField(); i++ {
 		if isIndirect {
 			if objValue.Elem().FieldByName(objType.Field(i).Name).CanSet() {
 				data[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Name
 				//ft:filed type
-				tag[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Tag.Get("ft")
+				//tag[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Tag.Get("ft")
 			}
 		} else {
 			if objValue.FieldByName(objType.Field(i).Name).CanSet() {
 				data[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Name
 				//ft:filed type
-				tag[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Tag.Get("ft")
+				//tag[strings.ToLower(objType.Field(i).Name)] = objType.Field(i).Tag.Get("ft")
 			}
 		}
 	}
@@ -80,7 +79,7 @@ func Register(modelName string, newFn func() interface{}) {
 
 	structCache.cacheData[objType.PkgPath()+"@"+objType.Name()] = data
 
-	structCache.cacheTag[objType.PkgPath()+"@"+objType.Name()] = tag
+	//structCache.cacheTag[objType.PkgPath()+"@"+objType.Name()] = tag
 
 	logger.Info("DB", ":", objType.PkgPath()+"@"+objType.Name(), "registered")
 }
@@ -88,8 +87,8 @@ func Register(modelName string, newFn func() interface{}) {
 func init() {
 	onceCache.Do(func() {
 		structCache = &StructCache{
-			cacheData:   map[string]map[string]string{},
-			cacheTag:    map[string]map[string]string{},
+			cacheData: map[string]map[string]string{},
+			//cacheTag:    map[string]map[string]string{},
 			newFuncData: map[string]func() interface{}{},
 		}
 	})
@@ -107,6 +106,8 @@ func CreateForDB(dbName string, objs []interface{}, dataCol []string) {
 		pathName := objType.PkgPath() + "@" + objType.Name()
 		//不在缓存则返回nil
 		if structCache.contains(pathName) {
+			//obj转sql解析异常时不执行
+			praseStatus := true
 
 			//构建插入sql insert into
 			createSQL := "insert into " + structCache.get(pathName, "@tablename") + " ("
@@ -122,16 +123,25 @@ func CreateForDB(dbName string, objs []interface{}, dataCol []string) {
 				createSQL = createSQL + "("
 				for _, colName := range dataCol {
 					c := structCache.get(pathName, colName)
-					createSQL = createSQL + "'" + reflect.Indirect(niv).FieldByName(c).String() + "',"
+
+					if sql, ok := fieldType(reflect.Indirect(niv).FieldByName(c)); ok {
+						createSQL = createSQL + "'" + sql + "',"
+					} else {
+						praseStatus = false
+					}
 				}
 				createSQL = strings.TrimSuffix(createSQL, ",") + "),"
 			}
 
 			createSQL = strings.TrimSuffix(createSQL, ",") + ";"
 
-			//logger.Debug(createSQL)
+			if praseStatus {
+				//logger.Debug(createSQL)
+				db.ExecuteDB(dbName, createSQL)
+			} else {
+				logger.Err(createSQL)
+			}
 
-			db.ExecuteDB(dbName, createSQL)
 		}
 	}
 }
@@ -153,18 +163,28 @@ func DeleteForDB(dbName string, objs []interface{}, whereDataCol []string) {
 
 			for _, obj := range objs {
 				niv := reflect.ValueOf(obj)
+				//obj转sql解析异常时不执行
+				praseStatus := true
 				deleteSQL := deleteSQLPrefix
 
 				for _, colName := range whereDataCol {
 					c := structCache.get(pathName, colName)
-					deleteSQL = deleteSQL + " and " + colName + "='" + reflect.Indirect(niv).FieldByName(c).String() + "'"
+
+					if sql, ok := fieldType(reflect.Indirect(niv).FieldByName(c)); ok {
+						deleteSQL = deleteSQL + " and " + colName + "='" + sql + "'"
+					} else {
+						praseStatus = false
+					}
 				}
 
 				deleteSQL = deleteSQL + ";"
 
-				//logger.Debug(deleteSQL)
-
-				db.ExecuteDB(dbName, deleteSQL)
+				if praseStatus {
+					//logger.Debug(deleteSQL)
+					db.ExecuteDB(dbName, deleteSQL)
+				} else {
+					logger.Err(deleteSQL)
+				}
 			}
 
 		}
@@ -216,23 +236,37 @@ func UpdateForDB(dbName string, objs []interface{}, dataCol []string, whereDataC
 			deleteSQLPrefix := "update " + structCache.get(pathName, "@tablename") + " set "
 
 			for _, obj := range objs {
+				//obj转sql解析异常时不执行
+				praseStatus := true
 				updateSQL := deleteSQLPrefix
 				niv := reflect.ValueOf(obj)
 				for _, colName := range dataCol {
 					c := structCache.get(pathName, colName)
-					updateSQL = updateSQL + colName + "='" + reflect.Indirect(niv).FieldByName(c).String() + "',"
+					if sql, ok := fieldType(reflect.Indirect(niv).FieldByName(c)); ok {
+						updateSQL = updateSQL + colName + "='" + sql + "',"
+					} else {
+						praseStatus = false
+					}
 				}
 				updateSQL = strings.TrimSuffix(updateSQL, ",") + " where 1=1"
 
 				for _, colName := range whereDataCol {
 					c := structCache.get(pathName, colName)
-					updateSQL = updateSQL + " and " + colName + "='" + reflect.Indirect(niv).FieldByName(c).String() + "'"
+
+					if sql, ok := fieldType(reflect.Indirect(niv).FieldByName(c)); ok {
+						updateSQL = updateSQL + " and " + colName + "='" + sql + "'"
+					} else {
+						praseStatus = false
+					}
 				}
 				updateSQL = updateSQL + ";"
 
-				//logger.Debug(updateSQL)
-
-				db.ExecuteDB(dbName, updateSQL)
+				if praseStatus {
+					//logger.Debug(updateSQL)
+					db.ExecuteDB(dbName, updateSQL)
+				} else {
+					logger.Err(updateSQL)
+				}
 			}
 		}
 	}
@@ -250,16 +284,42 @@ func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interfac
 
 	//不在缓存则返回nil
 	if structCache.contains(pathName) {
+		//obj转sql解析异常时不执行
+		praseStatus := true
 		dataSet := []interface{}{}
 		for _, data := range datas {
 			ni := structCache.newFuncData[pathName]()
 			niv := reflect.ValueOf(ni)
 			for index, colName := range dataCol {
-				reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetString(string(data[index]))
+
+				value := reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName))
+				switch value.Type().String() {
+				case "string":
+					reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetString(string(data[index]))
+				case "int":
+					if dataValue, err := strconv.Atoi(string(data[index])); err == nil {
+						reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetInt(int64(dataValue))
+					} else {
+						praseStatus = false
+					}
+				case "bool":
+					//reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetBool(bool(data[index]))
+				case "float32":
+					//reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetFloat(float32(data[index]))
+				case "float64":
+					//reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetFloat(float64(data[index]))
+				default:
+					praseStatus = false
+				}
 			}
 			dataSet = append(dataSet, ni)
 		}
-		return dataSet
+		if praseStatus {
+			return dataSet
+		} else {
+			logger.Err("data prase error")
+			return nil
+		}
 	} else {
 		return nil
 	}
@@ -271,4 +331,28 @@ func indirect(t reflect.Type) (reflect.Type, bool) {
 		return t.Elem(), true
 	}
 	return t, false
+}
+
+//检查字段类型 string、time.Time、bool、int、float64、float32
+func fieldType(data reflect.Value) (string, bool) {
+	result, ok := "", false
+	switch data.Type().String() {
+	case "string":
+		result = data.String()
+		ok = true
+	case "int":
+		result = strconv.FormatInt(data.Int(), 10)
+		ok = true
+	case "bool":
+		result = strconv.FormatBool(data.Bool())
+		ok = true
+	case "float32":
+		result = strconv.FormatFloat(data.Float(), 'f', -1, 32)
+		ok = true
+	case "float64":
+		result = strconv.FormatFloat(data.Float(), 'f', -1, 64)
+		ok = true
+	default:
+	}
+	return result, ok
 }
