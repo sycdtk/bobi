@@ -6,7 +6,9 @@ import (
 
 func TestNewLogger(t *testing.T) {
 
+	Debug("a 1", "a 111")
 	Debug("a 1")
+
 	Info("a 2")
 	Err("a 3")
 

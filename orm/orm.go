@@ -19,30 +19,39 @@ func init() {
 }
 
 //新增
-func Create(objs []interface{}) {
-	CreateDB("defatul", objs)
+func Create(objs []interface{}, dataCol []string) {
+	mapper.Create(objs, dataCol)
 }
 
-func CreateDB(dbName string, objs []interface{}) {
-
-}
-
-//修改
-func Delete(ids []string) {
-	DeleteDB("default", ids)
-}
-
-func DeleteDB(dbName string, ids []string) {
-
+func CreateDB(dbName string, objs []interface{}, dataCol []string) {
+	mapper.CreateForDB(dbName, objs, dataCol)
 }
 
 //删除
-func Update(objs []interface{}) {
-	UpdateDB("default", objs)
+func Delete(objs []interface{}, whereDataCol []string) {
+	mapper.Delete(objs, whereDataCol)
 }
 
-func UpdateDB(dbName string, objs []interface{}) {
+func DeleteDB(dbName string, objs []interface{}, whereDataCol []string) {
+	mapper.DeleteForDB(dbName, objs, whereDataCol)
+}
 
+//按ID删除
+func DeleteByID(objs []interface{}) {
+	mapper.DeleteByID(objs)
+}
+
+func DeleteByIDDB(dbName string, objs []interface{}) {
+	mapper.DeleteByIDForDB(dbName, objs)
+}
+
+//更新
+func Update(objs []interface{}, dataCol []string, whereDataCol []string) {
+	mapper.Update(objs, dataCol, whereDataCol)
+}
+
+func UpdateDB(dbName string, objs []interface{}, dataCol []string, whereDataCol []string) {
+	mapper.UpdateForDB(dbName, objs, dataCol, whereDataCol)
 }
 
 //查询
@@ -65,8 +74,8 @@ func ExecuteDB(dbName, execSql string, args ...interface{}) {
 	db.ExecuteDB(dbName, execSql, args...)
 }
 
-func Register(newFn func() interface{}) {
-	mapper.Register(newFn)
+func Register(modelName string, newFn func() interface{}) {
+	mapper.Register(modelName, newFn)
 }
 
 //返回数据库是否需要初始化

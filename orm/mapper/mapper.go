@@ -96,11 +96,11 @@ func init() {
 
 //创建持久化对象 objs:持久化对象   dataCol:持久化的列
 func Create(objs []interface{}, dataCol []string) {
-	CreateForDB("default", objs, dataCol)
+	CreateDB("default", objs, dataCol)
 }
 
 //创建持久化对象 dbName:数据库名称 objs:持久化对象   dataCol:持久化的列
-func CreateForDB(dbName string, objs []interface{}, dataCol []string) {
+func CreateDB(dbName string, objs []interface{}, dataCol []string) {
 	if len(objs) > 0 && len(dataCol) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
@@ -148,11 +148,11 @@ func CreateForDB(dbName string, objs []interface{}, dataCol []string) {
 
 //删除持久化对象	objs:持久化对象	whereDataCol:where条件
 func Delete(objs []interface{}, whereDataCol []string) {
-	DeleteForDB("default", objs, whereDataCol)
+	DeleteDB("default", objs, whereDataCol)
 }
 
 //删除持久化对象	dbName:数据库名称 objs:持久化对象	whereDataCol:where条件
-func DeleteForDB(dbName string, objs []interface{}, whereDataCol []string) {
+func DeleteDB(dbName string, objs []interface{}, whereDataCol []string) {
 	if len(objs) > 0 && len(whereDataCol) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
@@ -193,11 +193,11 @@ func DeleteForDB(dbName string, objs []interface{}, whereDataCol []string) {
 
 //基于ID删除持久化对象 objs:删除的持久化对象，需要包含ID字段及值
 func DeleteByID(objs []interface{}) {
-	DeleteByIDForDB("default", objs)
+	DeleteByIDDB("default", objs)
 }
 
 //基于ID删除持久化对象	dbName:数据库名称 objs:删除的持久化对象，需要包含ID字段及值
-func DeleteByIDForDB(dbName string, objs []interface{}) {
+func DeleteByIDDB(dbName string, objs []interface{}) {
 	if len(objs) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
@@ -221,11 +221,11 @@ func DeleteByIDForDB(dbName string, objs []interface{}) {
 
 //修改持久化对象	objs：需要更新的持久化对象  dataCol：持久化列 whereDataCol：where条件
 func Update(objs []interface{}, dataCol []string, whereDataCol []string) {
-	UpdateForDB("default", objs, dataCol, whereDataCol)
+	UpdateDB("default", objs, dataCol, whereDataCol)
 }
 
 //修改持久化对象	dbName:数据库名称 objs：需要更新的持久化对象  dataCol：持久化列 whereDataCol：where条件
-func UpdateForDB(dbName string, objs []interface{}, dataCol []string, whereDataCol []string) {
+func UpdateDB(dbName string, objs []interface{}, dataCol []string, whereDataCol []string) {
 	if len(objs) > 0 && len(dataCol) > 0 && len(whereDataCol) > 0 {
 		objType, _ := indirect(reflect.TypeOf(objs[0]))
 		pathName := objType.PkgPath() + "@" + objType.Name()
@@ -293,6 +293,7 @@ func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interfac
 			for index, colName := range dataCol {
 
 				value := reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName))
+
 				switch value.Type().String() {
 				case "string":
 					reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetString(string(data[index]))
