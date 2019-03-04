@@ -19,18 +19,20 @@ func TestOrm(t *testing.T) {
 
 	Register("test", func() interface{} { return &Aaa{} })
 
-	Execute("DROP TABLE bobi_test_aaa;")
+	if TableExist("bobi_test_aaa") {
+		Execute("DROP TABLE bobi_test_aaa;")
+	}
 	Execute(`CREATE TABLE
-    bobi_test_aaa
-    (
-		id TEXT,
-        username TEXT,
-		birth TEXT,
-		sex INTEGER,
-		age INTEGER,
-		xxx REAL,
-		yyy REAL
-    );`)
+		    bobi_test_aaa
+		    (
+				id TEXT,
+				username TEXT,
+				birth TEXT,
+				sex INTEGER,
+				age INTEGER,
+				xxx REAL,
+				yyy REAL
+		    );`)
 
 	a := &Aaa{ID: "10001", Username: "guanyu", Birth: "2019-02-25 00:32:00", Sex: true, Age: 1, XXX: 1.0021, YYY: 3.2213}
 	b := &Aaa{ID: "10002", Username: "zhangfei", Birth: "2019-02-26 00:32:00", Sex: true, Age: 1, XXX: 2.0021, YYY: 45.2213}
@@ -54,9 +56,42 @@ func TestOrm(t *testing.T) {
 	}
 }
 
-// func TestTableExist(t *testing.T) {
-// 	dbInitMap := TableExist()
-// 	if dbInitMap["test2"] {
-// 		t.Log("Need Init DB!")
-// 	}
-// }
+func TestTableExist(t *testing.T) {
+
+	if TableExist("bobi") {
+		t.Log("table bobi exist")
+	} else {
+		t.Error("table bobi is not exist")
+	}
+
+	if !TableExist("bobo") {
+		t.Log("table bobo is not exist")
+	} else {
+		t.Error("table bobo exist")
+	}
+
+	// ExecuteDB("test4", `CREATE TABLE
+	//    bobi_test_bbb
+	//    (
+	// 	id TEXT,
+	//        username TEXT,
+	// 	birth TEXT,
+	// 	sex INTEGER,
+	// 	age INTEGER,
+	// 	xxx REAL,
+	// 	yyy REAL
+	//    );`)
+
+	if TableExistDB("test4", "bobi_test_bbb") {
+		t.Log("db test4 : table bobi_test_bbb is not exist")
+	} else {
+		t.Error("db test4 : table bobi_test_bbb exist")
+	}
+
+	if !TableExistDB("test4", "bobi_test_qqq") {
+		t.Log("db test4 : table bobi_test_qqq is not exist")
+	} else {
+		t.Error("db test4 : table bobi_test_qqq exist")
+	}
+
+}

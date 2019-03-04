@@ -130,5 +130,7 @@ func ExecuteDB(dbName, execSql string, args ...interface{}) {
 		affectNum, _ := result.RowsAffected()
 
 		logger.Debug("DB", dbName, ":", execSql, args, "，最后ID：", lastID, "，受影响行数：", affectNum)
+	} else {
+		logger.Info("DB", dbName, " not found")
 	}
 }

@@ -31,20 +31,20 @@ func TMain() {
 
 	// obj := &Aaa{ID: "111", Username: "wolffy", Birth: "2019-01-01 00:00:00", Sex: true, Age: 30, XXX: 23.2222, YYY: 1.1111}
 
-	objv := reflect.TypeOf(&Aaa)
+	objv := reflect.TypeOf(&Aaa{})
 
-	// fmt.Println(fieldType(objv.Elem().Field(0)))
-	// fmt.Println(fieldType(objv.Elem().Field(1)))
-	// fmt.Println(fieldType(objv.Elem().Field(2)))
-	// fmt.Println(fieldType(objv.Elem().Field(3)))
-	// fmt.Println(fieldType(objv.Elem().Field(4)))
-	// fmt.Println(fieldType(objv.Elem().Field(5)))
-	// fmt.Println(fieldType(objv.Elem().Field(6)))
+	fmt.Println(fieldType(objv.Elem().Field(0)))
+	fmt.Println(fieldType(objv.Elem().Field(1)))
+	fmt.Println(fieldType(objv.Elem().Field(2)))
+	fmt.Println(fieldType(objv.Elem().Field(3)))
+	fmt.Println(fieldType(objv.Elem().Field(4)))
+	fmt.Println(fieldType(objv.Elem().Field(5)))
+	fmt.Println(fieldType(objv.Elem().Field(6)))
 
-	fmt.Println(objv.Elem().Field(1).Type().String())
-	fmt.Println(objv.Elem().Field(2).Type().String())
-	fmt.Println(objv.Elem().Field(3).Type().String())
-	fmt.Println(objv.Elem().Field(4).Type().String())
+	// fmt.Println(objv.Elem().Field(1).Type().String())
+	// fmt.Println(objv.Elem().Field(2).Type().String())
+	// fmt.Println(objv.Elem().Field(3).Type().String())
+	// fmt.Println(objv.Elem().Field(4).Type().String())
 
 	// objType := indirect(reflect.TypeOf(obj))
 

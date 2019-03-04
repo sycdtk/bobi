@@ -1,22 +1,11 @@
 package orm
 
 import (
-	"strings"
-
 	"github.com/sycdtk/bobi/config"
 	"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/orm/db"
 	"github.com/sycdtk/bobi/orm/mapper"
 )
-
-func init() {
-	dbInfos := TableExist()
-	for dbName, needInit := range dbInfos {
-		if needInit {
-			logger.Info("DB", dbName, ":", "init table structure success")
-		}
-	}
-}
 
 //新增
 func Create(objs []interface{}, dataCol []string) {
@@ -24,7 +13,7 @@ func Create(objs []interface{}, dataCol []string) {
 }
 
 func CreateDB(dbName string, objs []interface{}, dataCol []string) {
-	mapper.CreateForDB(dbName, objs, dataCol)
+	mapper.CreateDB(dbName, objs, dataCol)
 }
 
 //删除
@@ -33,7 +22,7 @@ func Delete(objs []interface{}, whereDataCol []string) {
 }
 
 func DeleteDB(dbName string, objs []interface{}, whereDataCol []string) {
-	mapper.DeleteForDB(dbName, objs, whereDataCol)
+	mapper.DeleteDB(dbName, objs, whereDataCol)
 }
 
 //按ID删除
@@ -42,7 +31,7 @@ func DeleteByID(objs []interface{}) {
 }
 
 func DeleteByIDDB(dbName string, objs []interface{}) {
-	mapper.DeleteByIDForDB(dbName, objs)
+	mapper.DeleteByIDDB(dbName, objs)
 }
 
 //更新
@@ -51,7 +40,7 @@ func Update(objs []interface{}, dataCol []string, whereDataCol []string) {
 }
 
 func UpdateDB(dbName string, objs []interface{}, dataCol []string, whereDataCol []string) {
-	mapper.UpdateForDB(dbName, objs, dataCol, whereDataCol)
+	mapper.UpdateDB(dbName, objs, dataCol, whereDataCol)
 }
 
 //查询
@@ -78,27 +67,35 @@ func Register(modelName string, newFn func() interface{}) {
 	mapper.Register(modelName, newFn)
 }
 
+func TableExist(tableName string) bool {
+	return TableExistDB("default", tableName)
+}
+
 //返回数据库是否需要初始化
-func TableExist() map[string]bool {
+func TableExistDB(dbName, tableName string) bool {
 
-	dbInitMap := map[string]bool{}
+	var dbType string
+	var isExist int
+	defaultDB := config.Read("db", "default")
 
-	dbNames := strings.Split(config.Read("db", "dbName"), ",")
-
-	for _, dbName := range dbNames {
-		//数据库类型
-		dbType := config.Read(dbName, "dbType")
-		switch dbType {
-		case "sqlite3":
-			dbInitMap[dbName] = len(db.QueryDB(dbName, "select name as tablename from sqlite_master where type='table' and name = 'bobi'")) == 0
-		case "postgres":
-			dbInitMap[dbName] = len(db.QueryDB(dbName, "select relname as tablename from pg_class where relname = 'bobi'")) == 0
-		case "mysql":
-			dbSchema := config.Read(dbName, "dbSchema")
-			dbInitMap[dbName] = len(db.QueryDB(dbName, "select table_name as tablename from information_schema.tables where table_schema=? and table_name ='bobi'", dbSchema)) == 0
-		default:
-			logger.Info("DB", ":", "No initialization")
-		}
+	if dbName == "default" {
+		dbType = config.Read(defaultDB, "dbType")
+	} else {
+		dbType = config.Read(dbName, "dbType")
 	}
-	return dbInitMap
+
+	switch dbType {
+	case "sqlite3":
+		data := db.QueryDB(dbName, "select name as tablename from sqlite_master where type='table' and name = ?", tableName)
+		isExist = len(data)
+	case "postgres":
+		isExist = len(db.QueryDB(dbName, "select relname as tablename from pg_class where relname = ?", tableName))
+	case "mysql":
+		dbSchema := config.Read(dbName, "dbSchema")
+		isExist = len(db.QueryDB(dbName, "select table_name as tablename from information_schema.tables where table_schema=? and table_name =?", dbSchema, tableName))
+	default:
+		logger.Info("DB", ":", "No support database")
+	}
+
+	return isExist > 0
 }
