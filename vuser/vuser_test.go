@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewUserAndGroup(t *testing.T) {
-	user := NewUser("管理员", "系统管理员", Male, "admin", "admin", "78306909@qq.com", "135XXXXXXXX", "", set.NewSet(), set.NewSet())
+	user := NewUser("管理员", "系统管理员", Male, "admin", "admin", "78306909@qq.com", "", "135XXXXXXXX", "", set.NewSet(), set.NewSet())
 
 	users := set.NewSet().Load(user.ID)
 

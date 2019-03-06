@@ -7,24 +7,6 @@ import (
 	"github.com/sycdtk/bobi/orm/mapper"
 )
 
-type DBOperation interface {
-	Save()
-	Update()
-	Delete()
-}
-
-func Save1(dbo DBOperation) {
-	dbo.Save()
-}
-
-func Update1(dbo DBOperation) {
-	dbo.Update()
-}
-
-func Delete1(dbo DBOperation) {
-	dbo.Delete()
-}
-
 //新增
 func Create(objs []interface{}, dataCol []string) {
 	mapper.Create(objs, dataCol)
@@ -85,6 +67,13 @@ func Register(modelName string, newFn func() interface{}) {
 	mapper.Register(modelName, newFn)
 }
 
+//获取传入对象判断数据库中表名是否存在
+func TableObjExist(obj interface{}) (string, bool) {
+	tn := mapper.TableName(obj)
+	return tn, TableExistDB("default", tn)
+}
+
+//判断数据库中表是否存在
 func TableExist(tableName string) bool {
 	return TableExistDB("default", tableName)
 }

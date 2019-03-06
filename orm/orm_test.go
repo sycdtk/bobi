@@ -67,7 +67,7 @@ func TestOrm(t *testing.T) {
 		    );`)
 
 	a := &Aaa{ID: "10001", Username: "guanyu", Birth: "2019-02-25 00:32:00", Sex: true, Age: 15, XXX: 1.0021, YYY: 3.2213}
-	Save1(a)
+	a.Save()
 
 	b := GetByID("10001")
 
@@ -110,7 +110,7 @@ func TestOrm(t *testing.T) {
 	}
 
 	a.Username = "guanyu111"
-	Update1(a)
+	a.Update()
 
 	b = GetByID("10001")
 
@@ -152,7 +152,7 @@ func TestOrm(t *testing.T) {
 		}
 	}
 
-	Delete1(a)
+	a.Delete()
 
 	b = GetByID("10001")
 

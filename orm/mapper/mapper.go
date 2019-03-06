@@ -272,8 +272,14 @@ func UpdateDB(dbName string, objs []interface{}, dataCol []string, whereDataCol 
 	}
 }
 
-func Query(objs []interface{}, whereDataCol []string) {
-
+//通过对象获得表名
+func TableName(obj interface{}) string {
+	var tableName string
+	objType, _ := indirect(reflect.TypeOf(obj))
+	if info, containsObj := structCache.cacheData[objType.PkgPath()+"@"+objType.Name()]; containsObj {
+		tableName, _ = info["@tablename"]
+	}
+	return tableName
 }
 
 //写入数据,传入结构体指针

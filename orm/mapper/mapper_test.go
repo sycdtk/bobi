@@ -570,3 +570,20 @@ func TestWrite(t *testing.T) {
 	db.Execute("delete from bobi_test_aaa")
 
 }
+
+func TestTableName(t *testing.T) {
+	Register("test", func() interface{} { return &Aaa{} })
+	Register("test", func() interface{} { return &Result{} })
+
+	if TableName(&Aaa{}) == "bobi_test_aaa" {
+		t.Log("TableName Aaa is ok")
+	} else {
+		t.Error("TableName Aaa is error")
+	}
+
+	if TableName(&Result{}) == "bobi_test_result" {
+		t.Log("TableName Result is ok")
+	} else {
+		t.Error("TableName Result is error")
+	}
+}
