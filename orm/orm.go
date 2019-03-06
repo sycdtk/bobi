@@ -7,6 +7,24 @@ import (
 	"github.com/sycdtk/bobi/orm/mapper"
 )
 
+type DBOperation interface {
+	Save()
+	Update()
+	Delete()
+}
+
+func Save1(dbo DBOperation) {
+	dbo.Save()
+}
+
+func Update1(dbo DBOperation) {
+	dbo.Update()
+}
+
+func Delete1(dbo DBOperation) {
+	dbo.Delete()
+}
+
 //新增
 func Create(objs []interface{}, dataCol []string) {
 	mapper.Create(objs, dataCol)

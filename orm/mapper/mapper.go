@@ -291,9 +291,7 @@ func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interfac
 			ni := structCache.newFuncData[pathName]()
 			niv := reflect.ValueOf(ni)
 			for index, colName := range dataCol {
-
 				value := reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName))
-
 				switch value.Type().String() {
 				case "string":
 					reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetString(string(data[index]))
