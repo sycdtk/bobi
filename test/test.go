@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 type Aaa struct {
@@ -31,25 +32,15 @@ func TMain() {
 
 	// obj := &Aaa{ID: "111", Username: "wolffy", Birth: "2019-01-01 00:00:00", Sex: true, Age: 30, XXX: 23.2222, YYY: 1.1111}
 
-	objv := reflect.TypeOf(&Aaa{})
+	rv := reflect.ValueOf(&Aaa{})
 
-	fmt.Println(fieldType(objv.Elem().Field(0)))
-	fmt.Println(fieldType(objv.Elem().Field(1)))
-	fmt.Println(fieldType(objv.Elem().Field(2)))
-	fmt.Println(fieldType(objv.Elem().Field(3)))
-	fmt.Println(fieldType(objv.Elem().Field(4)))
-	fmt.Println(fieldType(objv.Elem().Field(5)))
-	fmt.Println(fieldType(objv.Elem().Field(6)))
+	rvs := []*Aaa{&Aaa{}, &Aaa{}, &Aaa{}}
 
-	// fmt.Println(objv.Elem().Field(1).Type().String())
-	// fmt.Println(objv.Elem().Field(2).Type().String())
-	// fmt.Println(objv.Elem().Field(3).Type().String())
-	// fmt.Println(objv.Elem().Field(4).Type().String())
+	fmt.Println(strings.HasPrefix(rv.Type().String(), "[]"))
 
-	// objType := indirect(reflect.TypeOf(obj))
+	rvss := reflect.ValueOf(rvs)
 
-	// fmt.Println("-->", objType.Field(0).Tag.Get("ft"))
-	// fmt.Println("-->", objType.Field(0).Tag.Get("ft1"))
+	fmt.Println(strings.HasPrefix(rvss.Type().String(), "[]"))
 
 }
 
