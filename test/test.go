@@ -2,9 +2,13 @@ package test
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/sycdtk/bobi/logger"
+	"github.com/sycdtk/bobi/set"
 )
 
 type Aaa struct {
@@ -15,6 +19,10 @@ type Aaa struct {
 	Age      int
 	XXX      float64
 	YYY      float32
+	QQQ      []string
+	OOO      []*Aaa
+	WWW      *set.Set
+	ZZZ      map[string]string
 }
 
 func indirect(t reflect.Type) reflect.Type {
@@ -30,18 +38,34 @@ func trans(data *Aaa) interface{} {
 
 func TMain() {
 
-	// obj := &Aaa{ID: "111", Username: "wolffy", Birth: "2019-01-01 00:00:00", Sex: true, Age: 30, XXX: 23.2222, YYY: 1.1111}
+	obj := &Aaa{ID: "111", Username: "wolffy", Birth: "2019-01-01 00:00:00", Sex: true, Age: 30, XXX: 23.2222, YYY: 1.1111}
 
-	rv := reflect.ValueOf(&Aaa{})
+	relfectValue := reflect.ValueOf(obj)
 
-	rvs := []*Aaa{&Aaa{}, &Aaa{}, &Aaa{}}
+	relfectType := reflect.TypeOf(obj)
+	net.DefaultResolver
 
-	fmt.Println(strings.HasPrefix(rv.Type().String(), "[]"))
+	dd := reflect.Indirect(rv).FieldByName("WWW")
 
-	rvss := reflect.ValueOf(rvs)
+	zzz := reflect.Indirect(rv).FieldByName("ZZZ")
 
-	fmt.Println(strings.HasPrefix(rvss.Type().String(), "[]"))
+	qqq := reflect.Indirect(rv).FieldByName("QQQ")
 
+	id := reflect.Indirect(rv).FieldByName("ID")
+	ooo := reflect.Indirect(rv).FieldByName("OOO")
+
+	logger.Info(rv.Kind().String())
+	logger.Info(rv.Type().String())
+	logger.Info(dd.Kind().String())
+	logger.Info(dd.Type().String())
+	logger.Info(zzz.Kind().String())
+	logger.Info(zzz.Type().String())
+	logger.Info(qqq.Kind().String())
+	logger.Info(qqq.Type().String())
+	logger.Info(id.Kind().String())
+	logger.Info(id.Type().String())
+	logger.Info(ooo.Kind().String())
+	logger.Info(ooo.Type().String())
 }
 
 func fieldType(data reflect.Value) string {

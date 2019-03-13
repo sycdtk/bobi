@@ -4,6 +4,7 @@ import (
 	"testing"
 	//"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/orm/db"
+	"github.com/sycdtk/bobi/set"
 )
 
 type Aaa struct {
@@ -15,6 +16,7 @@ type Aaa struct {
 	XXX      float64
 	YYY      float32
 	QQQ      []string
+	Datas    *set.Set
 }
 
 type Result struct {

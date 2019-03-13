@@ -10,6 +10,12 @@ func (user *User) Save() {
 		"password", "email", "telephone", "mobile", "logining", "locked",
 		"errornum", "status", "standbyuser"}
 	orm.Create([]interface{}{user}, cols)
+
+	if user.Groups != nil && !user.Groups.Empty() {
+		for _, group := range user.Groups.Array() {
+			orm.Create([]interface{}{NewUserGroup(user.ID, group)}, []string{"id", "userid", "groupid"})
+		}
+	}
 }
 
 func (user *User) Update() {
@@ -17,6 +23,13 @@ func (user *User) Update() {
 		"password", "email", "telephone", "mobile", "logining", "locked",
 		"errornum", "status", "standbyuser"}
 	orm.Update([]interface{}{user}, cols, []string{"id"})
+
+	if user.Groups != nil && !user.Groups.Empty() {
+		orm.Delete([]interface{}{NewUserGroup(user.ID, "")}, []string{"userid"})
+		for _, group := range user.Groups.Array() {
+			orm.Create([]interface{}{NewUserGroup(user.ID, group)}, []string{"userid", "groupid"})
+		}
+	}
 }
 
 func (user *User) Delete() {
@@ -79,6 +92,28 @@ func init() {
 				errornum INTEGER,
 				status INTEGER,
 				standbyuser  TEXT
+		    );`)
+		logger.Info("create table:", tn)
+	}
+
+	orm.Register("vuser", func() interface{} { return &UserGroup{} })
+	if tn, ok := orm.TableObjExist(&UserGroup{}); !ok {
+		orm.Execute(`CREATE TABLE ` +
+			tn +
+			`(
+				userid TEXT,
+				groupid TEXT
+		    );`)
+		logger.Info("create table:", tn)
+	}
+
+	orm.Register("vuser", func() interface{} { return &UserOrganization{} })
+	if tn, ok := orm.TableObjExist(&UserOrganization{}); !ok {
+		orm.Execute(`CREATE TABLE ` +
+			tn +
+			`(
+				userid TEXT,
+				organizationid TEXT
 		    );`)
 		logger.Info("create table:", tn)
 	}

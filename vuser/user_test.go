@@ -7,12 +7,20 @@ import (
 )
 
 func TestUser(t *testing.T) {
+
 	user := NewUser("wolffy", "test user", Male, "wolffy", "123456", "78306909@qq.com",
 		"010-12345678", "13520040000", "", set.NewSet(), set.NewSet())
 	//user.Save()
 	user = QueryByUsername("wolffy")
+
+	groups := set.NewSet()
+	groups.Add("111111")
+	groups.Add("22222")
+	user.Groups = groups
+
 	user.Telephone = "010-12345678"
 	user.Update()
+
 	user = QueryByID(user.ID)
 	user.Name = "niky"
 	user.Update()

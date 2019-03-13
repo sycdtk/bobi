@@ -43,6 +43,16 @@ type User struct {
 	Organizations *set.Set //用户所属组织机构ID集合
 }
 
+type UserGroup struct {
+	UserID  string
+	GroupID string
+}
+
+type UserOrganization struct {
+	UserID         string
+	OrganizationID string
+}
+
 func NewUser(name, description, gender, username, password, email, telephone, mobile, standbyUser string, groups, organizations *set.Set) *User {
 	user := &User{
 		ID:            random.UniqueID(),
@@ -85,4 +95,11 @@ func NewUser(name, description, gender, username, password, email, telephone, mo
 	}
 
 	return user
+}
+
+func NewUserGroup(userID, groupID string) *UserGroup {
+	return &UserGroup{
+		UserID:  userID,
+		GroupID: groupID,
+	}
 }

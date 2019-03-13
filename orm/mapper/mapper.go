@@ -298,7 +298,7 @@ func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interfac
 			niv := reflect.ValueOf(ni)
 			for index, colName := range dataCol {
 				value := reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName))
-				switch value.Type().String() {
+				switch value.Kind().String() {
 				case "string":
 					reflect.Indirect(niv).FieldByName(structCache.get(pathName, colName)).SetString(string(data[index]))
 				case "int":
@@ -334,6 +334,7 @@ func Write(obj interface{}, datas [][]sql.RawBytes, dataCol []string) []interfac
 						}
 					}
 				default:
+					logger.Err("unsupport type")
 					praseStatus = false
 				}
 			}
