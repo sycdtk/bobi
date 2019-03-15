@@ -33,6 +33,7 @@ func (user *User) Update() {
 }
 
 func (user *User) Delete() {
+	orm.Delete([]interface{}{NewUserGroup(user.ID, "")}, []string{"userid"})
 	orm.DeleteByID([]interface{}{user})
 }
 
