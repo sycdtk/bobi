@@ -77,27 +77,34 @@ func BenchmarkConcurrencyUser(b *testing.B) {
 				"010-12345678", "13520040000", "", set.NewSet(), set.NewSet())
 			user.Save()
 			user = QueryByUsername("wolffy")
+			user = QueryByUsername("wolffy")
+			user = QueryByUsername("wolffy")
+			user = QueryByUsername("wolffy")
+			user = QueryByUsername("wolffy")
+			user = QueryByUsername("wolffy")
+			user = QueryByUsername("wolffy")
+			user = QueryByUsername("wolffy")
 
-			groups := set.NewSet()
-			groups.Add("111111")
-			groups.Add("22222")
-			user.Groups = groups
+			// groups := set.NewSet()
+			// groups.Add("111111")
+			// groups.Add("22222")
+			// user.Groups = groups
 
-			user.Telephone = "010-12345678"
-			user.Update()
+			// user.Telephone = "010-12345678"
+			// user.Update()
 
-			user = QueryByID(user.ID)
-			user.Name = "niky"
-			user.Update()
-			user = QueryByID(user.ID)
-			user.Name = "niky"
-			user.Update()
-			user = QueryByID(user.ID)
-			user.Name = "niky"
-			user.Update()
-			user = QueryByID(user.ID)
-			user.Name = "niky"
-			user.Update()
+			// user = QueryByID(user.ID)
+			// user.Name = "niky"
+			// user.Update()
+			// user = QueryByID(user.ID)
+			// user.Name = "niky"
+			// user.Update()
+			// user = QueryByID(user.ID)
+			// user.Name = "niky"
+			// user.Update()
+			// user = QueryByID(user.ID)
+			// user.Name = "niky"
+			// user.Update()
 			user.Delete()
 		}
 	})

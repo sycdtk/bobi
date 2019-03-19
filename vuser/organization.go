@@ -10,7 +10,7 @@ type Organization struct {
 	Name        string
 	Description string
 	Level       int //组织层级
-	Order       int //层级内机构顺序
+	SortNum     int //层级内机构顺序
 
 	Leaders  *set.Set //机构领导ID集合
 	Members  *set.Set //机构成员ID集合

@@ -96,7 +96,7 @@ func TableExistDB(dbName, tableName string) bool {
 		data := db.QueryDB(dbName, "select name as tablename from sqlite_master where type='table' and name = ?", tableName)
 		isExist = len(data)
 	case "postgres":
-		isExist = len(db.QueryDB(dbName, "select relname as tablename from pg_class where relname = ?", tableName))
+		isExist = len(db.QueryDB(dbName, "select relname as tablename from pg_class where relname = $1", tableName))
 	case "mysql":
 		dbSchema := config.Read(dbName, "dbSchema")
 		isExist = len(db.QueryDB(dbName, "select table_name as tablename from information_schema.tables where table_schema=? and table_name =?", dbSchema, tableName))

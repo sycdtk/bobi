@@ -13,5 +13,8 @@ orm 提供能力
 	date
 	bool
 	
+postgres  查询参数替换$1
+sqlite3	  查询参数替换?
+	
 
 

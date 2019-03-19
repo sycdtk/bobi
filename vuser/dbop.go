@@ -77,7 +77,7 @@ func QueryByUsername(username string) *User {
 	results := orm.Query(&User{},
 		"select id,name,description,gender,username,password,email, "+
 			"telephone,mobile,logining,locked,errornum,status,standbyuser "+
-			" from "+tn+" where username=?", cols, username)
+			" from "+tn+" where username=$1", cols, username)
 	if len(results) > 0 {
 		if data, ok := results[0].(*User); ok {
 			return data
@@ -95,7 +95,7 @@ func QueryByID(ID string) *User {
 	results := orm.Query(&User{},
 		"select id,name,description,gender,username,password,email, "+
 			"telephone,mobile,logining,locked,errornum,status,standbyuser "+
-			" from "+tn+" where id=?", cols, ID)
+			" from "+tn+" where id=$1", cols, ID)
 	if len(results) > 0 {
 		if data, ok := results[0].(*User); ok {
 			return data
@@ -110,20 +110,20 @@ func init() {
 		orm.Execute(`CREATE TABLE ` +
 			tn +
 			`(
-				id TEXT,
-				name TEXT,
-				description TEXT,
-				gender TEXT,
-				username TEXT,
-				password TEXT,
-				email TEXT,
-				telephone TEXT,
-				mobile TEXT,
-				logining INTEGER,
-				locked INTEGER,
-				errornum INTEGER,
-				status INTEGER,
-				standbyuser  TEXT
+				id text,
+				name text,
+				description text,
+				gender text,
+				username text,
+				password text,
+				email text,
+				telephone text,
+				mobile text,
+				logining boolean,
+				locked boolean,
+				errornum integer,
+				status integer,
+				standbyuser text
 		    );`)
 		logger.Info("create table:", tn)
 	}
@@ -133,31 +133,46 @@ func init() {
 		orm.Execute(`CREATE TABLE ` +
 			tn +
 			`(
-				userid TEXT,
-				groupid TEXT
+				userid text,
+				groupid text
+		    );`)
+		logger.Info("create table:", tn)
+	}
+
+	orm.Register("vuser", func() interface{} { return &UserOrganization{} })
+	if tn, ok := orm.TableObjExist(&UserOrganization{}); !ok {
+		orm.Execute(`CREATE TABLE ` +
+			tn +
+			`(
+				userid text,
+				organizationid text
 		    );`)
 		logger.Info("create table:", tn)
 	}
 
 	orm.Register("vuser", func() interface{} { return &Group{} })
-	if tn, ok := orm.TableObjExist(&UserOrganization{}); !ok {
+	if tn, ok := orm.TableObjExist(&Group{}); !ok {
 		orm.Execute(`CREATE TABLE ` +
 			tn +
 			`(
-				userid TEXT,
-				organizationid TEXT
+				id text,
+				name text,
+				description text
 		    );`)
 		logger.Info("create table:", tn)
 	}
 
-	orm.Register("vuser", func() interface{} { return &User{} })
-	if tn, ok := orm.TableObjExist(&User{}); !ok {
+	orm.Register("vuser", func() interface{} { return &Organization{} })
+	if tn, ok := orm.TableObjExist(&Organization{}); !ok {
 		orm.Execute(`CREATE TABLE ` +
 			tn +
 			`(
-				id TEXT,
-				name TEXT,
-				description TEXT
+				id text,
+				name text,
+				description text,
+				level integer,
+				sortnum integer,
+				parentorg text
 		    );`)
 		logger.Info("create table:", tn)
 	}
