@@ -9,5 +9,5 @@ import (
 func init() {
 
 	//启动监听服务
-	restful.ListenAndServe(config.Read("server", "port"))
+	restful.ListenAndServe(config.Read("web", "port"))
 }

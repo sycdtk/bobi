@@ -101,7 +101,7 @@ func (api *RESTApi) path(pattern string) string {
 }
 
 func ListenAndServe(port string) {
-	logger.Info("server port : ", config.Read("server", "port"))
+	logger.Info("listen port : ", port)
 	http.ListenAndServe(":"+port, restApi.mux)
 }
 
