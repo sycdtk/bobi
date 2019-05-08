@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/sycdtk/bobi/config"
+	"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/web/message"
 )
 
@@ -70,9 +71,9 @@ func (api *HttpApi) path(pattern string) string {
 	return prefix + pattern
 }
 
-func (api *HttpApi) ListenAndServe(port) {
-	portString := fmt.Sprintf(":%d", port)
-	return http.ListenAndServe(portString, api.mux)
+func (api *HttpApi) ListenAndServe(port string) {
+	logger.Info("server port : ", config.Read("server", "port"))
+	http.ListenAndServe(":"+port, api.mux)
 }
 
 //构建函数(单例模式)
