@@ -11,7 +11,7 @@ import (
 )
 
 var once sync.Once
-var API *HttpApi
+var restApi *RESTApi
 
 //请求验证及请求类型判断
 func wapper(handler func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) http.HandlerFunc {
@@ -50,20 +50,20 @@ func wapper(handler func(http.ResponseWriter, *http.Request) interface{}, method
 }
 
 //RESTful API
-type HttpApi struct {
+type RESTApi struct {
 	baseName string
 	mux      *http.ServeMux
 }
 
-func (api *HttpApi) HandleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) {
+func (api *RESTApi) handleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) {
 	api.mux.HandleFunc(api.path(pattern), wapper(handleFunc, method, auth))
 }
 
-func (api *HttpApi) Handle(pattern string, handler http.Handler) {
+func (api *RESTApi) handle(pattern string, handler http.Handler) {
 	api.mux.Handle(api.path(pattern), handler)
 }
 
-func (api *HttpApi) path(pattern string) string {
+func (api *RESTApi) path(pattern string) string {
 	prefix := api.baseName
 	if prefix != "" {
 		prefix = "/" + prefix
@@ -71,14 +71,22 @@ func (api *HttpApi) path(pattern string) string {
 	return prefix + pattern
 }
 
-func (api *HttpApi) ListenAndServe(port string) {
+func ListenAndServe(port string) {
 	logger.Info("server port : ", config.Read("server", "port"))
-	http.ListenAndServe(":"+port, api.mux)
+	http.ListenAndServe(":"+port, restApi.mux)
+}
+
+func HandleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) {
+	restApi.handleFunc(pattern, handleFunc, method, auth)
+}
+
+func Handle(pattern string, handler http.Handler) {
+	restApi.handle(pattern, handler)
 }
 
 //构建函数(单例模式)
 func init() {
 	once.Do(func() {
-		API = &HttpApi{baseName: config.Read("web", "baseName"), mux: http.NewServeMux()}
+		restApi = &RESTApi{baseName: config.Read("web", "baseName"), mux: http.NewServeMux()}
 	})
 }
