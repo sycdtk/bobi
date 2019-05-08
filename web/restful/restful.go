@@ -3,18 +3,29 @@ package restful
 
 import (
 	"net/http"
+	"net/url"
+	"strconv"
 	"sync"
 
 	"github.com/sycdtk/bobi/config"
 	"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/web/message"
+	"github.com/sycdtk/bobi/web/session"
+	"github.com/sycdtk/bobi/web/session/memory"
 )
 
 var once sync.Once
 var restApi *RESTApi
 
+//RESTful API
+type RESTApi struct {
+	baseName       string
+	mux            *http.ServeMux
+	sessionManager *session.SessionManager
+}
+
 //请求验证及请求类型判断
-func wapper(handler func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) http.HandlerFunc {
+func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		if req.ParseForm() != nil {
@@ -23,12 +34,36 @@ func wapper(handler func(http.ResponseWriter, *http.Request) interface{}, method
 			return
 		}
 
-		//TODO 权限认证
-		if auth {
-			//TODO 检查sessionid
+		//权限认证
+		//检查sessionid
+		cookie, err := req.Cookie(api.baseName)
+		if err != nil || cookie.Value == "" { //cookie中的session id不存在，无权限
+			if auth { //需要鉴权
+				res.WriteHeader(http.StatusUnauthorized)
+				res.Write(message.NewMessage(message.FailedCode, message.FailedMsg, nil))
+				return
+			} else { //不需要鉴权,添加cookie
+				cookie := api.sessionManager.Cookie()
+				http.SetCookie(res, &cookie)
+			}
+		} else { //cookie存在
+			sessionID, _ := url.QueryUnescape(cookie.Value)
+			if sessionObj := api.sessionManager.Check(sessionID); sessionObj != nil { //session Id 存在则读取
+				//session存在则更新
+				sessionObj.Update()
+			} else { //session Id 不存在，无权限
+				if auth { //session不存在，且需要鉴权
+					res.WriteHeader(http.StatusUnauthorized)
+					res.Write(message.NewMessage(message.FailedCode, message.FailedMsg, nil))
+					return
+				} else { //session不存在，不需要鉴权
+					cookie := api.sessionManager.Cookie()
+					http.SetCookie(res, &cookie)
+				}
+			}
 		}
 
-		//TODO 请求类型解析
+		//请求类型解析
 		var content interface{}
 
 		if req.Method == method {
@@ -44,19 +79,13 @@ func wapper(handler func(http.ResponseWriter, *http.Request) interface{}, method
 			return
 		}
 
-		//TODO 写返回数据
+		//写返回数据
 		res.Write(message.NewMessage(message.SuccessCode, message.SuccessMsg, content))
 	}
 }
 
-//RESTful API
-type RESTApi struct {
-	baseName string
-	mux      *http.ServeMux
-}
-
 func (api *RESTApi) handleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) {
-	api.mux.HandleFunc(api.path(pattern), wapper(handleFunc, method, auth))
+	api.mux.HandleFunc(api.path(pattern), api.wapper(handleFunc, method, auth))
 }
 
 func (api *RESTApi) handle(pattern string, handler http.Handler) {
@@ -87,6 +116,19 @@ func Handle(pattern string, handler http.Handler) {
 //构建函数(单例模式)
 func init() {
 	once.Do(func() {
-		restApi = &RESTApi{baseName: config.Read("web", "baseName"), mux: http.NewServeMux()}
+		//读取配置
+		cycle, _ := strconv.ParseInt(config.Read("web", "cycle"), 10, 64)
+		maxLifeTime, _ := strconv.ParseInt(config.Read("web", "maxLifeTime"), 10, 64)
+		baseName := config.Read("web", "baseName")
+
+		//初始化session管理器
+		session.Register(baseName, memory.NewMemProvider())
+		sessionManager, _ := session.NewSessionManager(baseName, maxLifeTime, cycle)
+
+		//启动session过期回收协程
+		go sessionManager.GC()
+
+		//构建路由服务
+		restApi = &RESTApi{baseName: config.Read("web", "baseName"), mux: http.NewServeMux(), sessionManager: sessionManager}
 	})
 }

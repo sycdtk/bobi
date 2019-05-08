@@ -42,6 +42,11 @@ func (sms *SessionMemStore) ID() string {
 	return sms.sessionID
 }
 
+//更新时间
+func (sms *SessionMemStore) Update() {
+	sms.lastAccessedTime = time.Now()
+}
+
 //定义session内存维护接口
 type MemProvider struct {
 	sessions sync.Map //存储session
@@ -77,6 +82,14 @@ func (mp *MemProvider) Read(sessionID string) (session session.Session, err erro
 	}
 
 	return mp.Init(sessionID)
+}
+
+func (mp *MemProvider) Update(sessionID string) {
+	if ss, ok := mp.sessions.Load(sessionID); ok {
+		sss := ss.(*SessionMemStore)
+		sss.Update()
+		logger.Debug("更新session ID：", sss.ID())
+	}
 }
 
 //session 销毁
