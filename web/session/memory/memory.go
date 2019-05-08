@@ -10,30 +10,22 @@ import (
 
 //session 内存存储模型
 type SessionMemStore struct {
-	sessionID        string                      //session ID
-	lastAccessedTime time.Time                   //最后访问时间
-	values           map[interface{}]interface{} //session 数据
-	mLock            *sync.RWMutex               //保证线程安全
+	sessionID        string    //session ID
+	lastAccessedTime time.Time //最后访问时间
+	values           sync.Map  //session 数据
 }
 
 //设置session值
 func (sms *SessionMemStore) Set(key, value interface{}) error {
-	sms.mLock.Lock()
-	defer sms.mLock.Unlock()
-
-	sms.values[key] = value
+	sms.values.Store(key, value)
 	sms.lastAccessedTime = time.Now()
-
 	return nil
 }
 
 //获取session值
 func (sms *SessionMemStore) Get(key interface{}) interface{} {
-	sms.mLock.RLock()
-	defer sms.mLock.RUnlock()
 	sms.lastAccessedTime = time.Now()
-
-	if v, ok := sms.values[key]; ok {
+	if v, ok := sms.values.Load(key); ok {
 		return v
 	}
 	return nil
@@ -41,9 +33,7 @@ func (sms *SessionMemStore) Get(key interface{}) interface{} {
 
 //删除session值
 func (sms *SessionMemStore) Del(key interface{}) error {
-	sms.mLock.Lock()
-	defer sms.mLock.Unlock()
-	delete(sms.values, key)
+	sms.values.Delete(key)
 	return nil
 }
 
@@ -54,22 +44,18 @@ func (sms *SessionMemStore) ID() string {
 
 //定义session内存维护接口
 type MemProvider struct {
-	mLock    *sync.RWMutex               //保证线程安全
-	sessions map[string]*SessionMemStore //存储session
+	sessions sync.Map //存储session
 }
 
 func NewMemProvider() session.SessionProvider {
-	return &MemProvider{sessions: make(map[string]*SessionMemStore), mLock: new(sync.RWMutex)}
+	return &MemProvider{}
 }
 
 //创建session
 func (mp *MemProvider) Init(sessionID string) (session session.Session, err error) {
-	mp.mLock.Lock()
-	defer mp.mLock.Unlock()
 
-	values := make(map[interface{}]interface{}, 0)
-	ss := &SessionMemStore{sessionID: sessionID, lastAccessedTime: time.Now(), values: values, mLock: new(sync.RWMutex)}
-	mp.sessions[sessionID] = ss
+	ss := &SessionMemStore{sessionID: sessionID, lastAccessedTime: time.Now()}
+	mp.sessions.Store(sessionID, ss)
 
 	logger.Debug("新建session ID：", ss.ID())
 
@@ -78,15 +64,16 @@ func (mp *MemProvider) Init(sessionID string) (session session.Session, err erro
 
 //检查session ID是否存在
 func (mp *MemProvider) Check(sessionID string) bool {
-	_, ok := mp.sessions[sessionID]
+	_, ok := mp.sessions.Load(sessionID)
 	return ok
 }
 
 //读取session
 func (mp *MemProvider) Read(sessionID string) (session session.Session, err error) {
-	if ss, ok := mp.sessions[sessionID]; ok {
-		logger.Debug("读取session ID：", ss.ID())
-		return ss, nil
+	if ss, ok := mp.sessions.Load(sessionID); ok {
+		sss := ss.(*SessionMemStore)
+		logger.Debug("读取session ID：", sss.ID())
+		return sss, nil
 	}
 
 	return mp.Init(sessionID)
@@ -94,20 +81,28 @@ func (mp *MemProvider) Read(sessionID string) (session session.Session, err erro
 
 //session 销毁
 func (mp *MemProvider) Destroy(sessionID string) {
-	if _, ok := mp.sessions[sessionID]; ok {
-		delete(mp.sessions, sessionID)
+	if _, ok := mp.sessions.Load(sessionID); ok {
+		mp.sessions.Delete(sessionID)
+		logger.Debug("删除session ID：", sessionID)
 	}
 }
 
 //gc 销毁过期session
 func (mp *MemProvider) GC(maxLifeTime int64) {
-	mp.mLock.Lock()
-	defer mp.mLock.Unlock()
 
-	for sessionID, session := range mp.sessions {
+	deleteSessionIDs := make(map[string]int)
+
+	mp.sessions.Range(func(sessionIDObj, sessionObj interface{}) bool {
+		sessionID := sessionIDObj.(string)
+		session := sessionObj.(*SessionMemStore)
 		if (session.lastAccessedTime.Unix() + maxLifeTime) < time.Now().Unix() {
-			delete(mp.sessions, sessionID)
-			logger.Debug("删除session ID：", sessionID)
+			deleteSessionIDs[sessionID] = 0
 		}
+		return true
+	})
+
+	for sessionID, _ := range deleteSessionIDs {
+		mp.sessions.Delete(sessionID)
+		logger.Debug("删除session ID：", sessionID)
 	}
 }

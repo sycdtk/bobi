@@ -19,8 +19,8 @@ func init() {
 	maxLifeTimeStr := config.Read("web", "maxLifeTime")
 	maxLifeTime, _ := strconv.ParseInt(maxLifeTimeStr, 10, 64)
 
-	session.Register("memory", memory.NewMemProvider())
-	SessionManager, _ = session.NewSessionManager("memory", "gosessionID", maxLifeTime, cycle)
+	session.Register("bobi", memory.NewMemProvider())
+	SessionManager, _ = session.NewSessionManager("bobi", "sessionID", maxLifeTime, cycle)
 
 	go SessionManager.GC()
 }

@@ -36,13 +36,12 @@ type SessionProvider interface {
 //session管理器
 type SessionManager struct {
 	cookieName  string          //cookie名称
-	mLock       *sync.Mutex     //保证线程安全
 	provider    SessionProvider //session维护接口
 	maxLifeTime int64           //session生命周期,单位分钟
 	gcCycle     int64           //回收时间,nanosecond
 }
 
-//创建session ID
+//生成session ID
 func (sm *SessionManager) sessionID() string {
 	b := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
@@ -53,8 +52,6 @@ func (sm *SessionManager) sessionID() string {
 
 //记录或创建session
 func (sm *SessionManager) Start(w http.ResponseWriter, r *http.Request) (session Session) {
-	sm.mLock.Lock()
-	defer sm.mLock.Unlock()
 
 	cookie, err := r.Cookie(sm.cookieName)
 
@@ -70,7 +67,7 @@ func (sm *SessionManager) Start(w http.ResponseWriter, r *http.Request) (session
 		cookie := http.Cookie{Name: sm.cookieName, Expires: expiration, Path: "/", HttpOnly: true, MaxAge: -1}
 		http.SetCookie(w, &cookie)
 		logger.Debug("session ID 不存在，页面跳转至登录界面！")
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/login", http.StatusNotFound)
 	} else { //cookie value值不为空
 
 		sessionID, _ := url.QueryUnescape(cookie.Value)
@@ -82,7 +79,7 @@ func (sm *SessionManager) Start(w http.ResponseWriter, r *http.Request) (session
 			cookie := http.Cookie{Name: sm.cookieName, Expires: expiration, Path: "/", HttpOnly: true, MaxAge: -1}
 			http.SetCookie(w, &cookie)
 			logger.Debug("session ID 不存在，页面跳转至登录界面！")
-			http.Redirect(w, r, "/login", http.StatusFound)
+			http.Redirect(w, r, "/login", http.StatusNotFound)
 		}
 
 	}
@@ -95,9 +92,6 @@ func (sm *SessionManager) Destroy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || cookie.Value == "" {
 
 	} else {
-		sm.mLock.Lock()
-		defer sm.mLock.Unlock()
-
 		sm.provider.Destroy(cookie.Value)
 
 		expiration := time.Now()
@@ -109,10 +103,8 @@ func (sm *SessionManager) Destroy(w http.ResponseWriter, r *http.Request) {
 
 //session回收、销毁
 func (sm *SessionManager) GC() {
-	sm.mLock.Lock()
-	defer sm.mLock.Unlock()
 	sm.provider.GC(sm.maxLifeTime)
-	time.AfterFunc(time.Duration(sm.gcCycle), func() { sm.GC() })
+	time.AfterFunc(time.Duration(sm.gcCycle*1000*1000*1000), func() { sm.GC() })
 }
 
 //session provider 注册
@@ -133,5 +125,5 @@ func NewSessionManager(providerName, cookieName string, maxLifeTime int64, gcCyc
 		return nil, errtools.NewErr("获取 session provider 维护接口失败！")
 	}
 
-	return &SessionManager{provider: provider, cookieName: cookieName, maxLifeTime: maxLifeTime, gcCycle: gcCycle, mLock: new(sync.Mutex)}, nil
+	return &SessionManager{provider: provider, cookieName: cookieName, maxLifeTime: maxLifeTime, gcCycle: gcCycle}, nil
 }
