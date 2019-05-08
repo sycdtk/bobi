@@ -70,6 +70,11 @@ func (api *HttpApi) path(pattern string) string {
 	return prefix + pattern
 }
 
+func (api *HttpApi) ListenAndServe(port) {
+	portString := fmt.Sprintf(":%d", port)
+	return http.ListenAndServe(portString, api.mux)
+}
+
 //构建函数(单例模式)
 func init() {
 	once.Do(func() {
