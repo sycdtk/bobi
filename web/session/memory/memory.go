@@ -62,7 +62,7 @@ func (mp *MemProvider) Init(sessionID string) (session session.Session, err erro
 	ss := &SessionMemStore{sessionID: sessionID, lastAccessedTime: time.Now()}
 	mp.sessions.Store(sessionID, ss)
 
-	logger.Debug("新建session ID：", ss.ID())
+	logger.Debug("create session ID：", ss.ID())
 
 	return ss, nil
 }
@@ -77,7 +77,7 @@ func (mp *MemProvider) Check(sessionID string) bool {
 func (mp *MemProvider) Read(sessionID string) (session session.Session, err error) {
 	if ss, ok := mp.sessions.Load(sessionID); ok {
 		sss := ss.(*SessionMemStore)
-		logger.Debug("读取session ID：", sss.ID())
+		logger.Debug("read session ID：", sss.ID())
 		return sss, nil
 	}
 
@@ -88,7 +88,7 @@ func (mp *MemProvider) Update(sessionID string) {
 	if ss, ok := mp.sessions.Load(sessionID); ok {
 		sss := ss.(*SessionMemStore)
 		sss.Update()
-		logger.Debug("更新session ID：", sss.ID())
+		logger.Debug("update session ID：", sss.ID())
 	}
 }
 
@@ -96,7 +96,7 @@ func (mp *MemProvider) Update(sessionID string) {
 func (mp *MemProvider) Destroy(sessionID string) {
 	if _, ok := mp.sessions.Load(sessionID); ok {
 		mp.sessions.Delete(sessionID)
-		logger.Debug("删除session ID：", sessionID)
+		logger.Debug("delete session ID：", sessionID)
 	}
 }
 
@@ -116,6 +116,6 @@ func (mp *MemProvider) GC(maxLifeTime int64) {
 
 	for sessionID, _ := range deleteSessionIDs {
 		mp.sessions.Delete(sessionID)
-		logger.Debug("删除session ID：", sessionID)
+		logger.Debug("delete session ID：", sessionID)
 	}
 }

@@ -73,6 +73,8 @@ func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request) inte
 
 			content = handler(res, req)
 
+			logger.Debug(content)
+
 		} else {
 			res.WriteHeader(http.StatusMethodNotAllowed)
 			res.Write(message.NewMessage(message.FailedCode, message.FailedMsg, nil))
