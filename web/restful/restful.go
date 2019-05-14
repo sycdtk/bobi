@@ -10,6 +10,7 @@ import (
 	"github.com/sycdtk/bobi/config"
 	"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/web/message"
+	"github.com/sycdtk/bobi/web/restful/mux"
 	"github.com/sycdtk/bobi/web/session"
 	"github.com/sycdtk/bobi/web/session/memory"
 )
@@ -20,13 +21,13 @@ var restApi *RESTApi
 //RESTful API
 type RESTApi struct {
 	baseName       string
-	mux            *http.ServeMux
+	muxRouter      *mux.ServeMux
 	sessionManager *session.SessionManager
 }
 
 //请求验证及请求类型判断
-func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
+func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request, map[string]string) interface{}, method string, auth bool) mux.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request, paramsMap map[string]string) {
 
 		if req.ParseForm() != nil {
 			res.WriteHeader(http.StatusBadRequest)
@@ -86,12 +87,12 @@ func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request) inte
 	}
 }
 
-func (api *RESTApi) handleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) {
-	api.mux.HandleFunc(api.path(pattern), api.wapper(handleFunc, method, auth))
+func (api *RESTApi) handleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request, map[string]string) interface{}, method string, auth bool) {
+	api.muxRouter.HandleFunc(api.path(pattern), api.wapper(handleFunc, method, auth))
 }
 
-func (api *RESTApi) handle(pattern string, handler http.Handler) {
-	api.mux.Handle(api.path(pattern), handler)
+func (api *RESTApi) handle(pattern string, handler mux.Handler) {
+	api.muxRouter.Handle(api.path(pattern), handler)
 }
 
 func (api *RESTApi) path(pattern string) string {
@@ -104,10 +105,10 @@ func (api *RESTApi) path(pattern string) string {
 
 func ListenAndServe(port string) {
 	logger.Info("listen port : ", port)
-	http.ListenAndServe(":"+port, restApi.mux)
+	http.ListenAndServe(":"+port, restApi.muxRouter)
 }
 
-func HandleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request) interface{}, method string, auth bool) {
+func HandleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request, map[string]string) interface{}, method string, auth bool) {
 	restApi.handleFunc(pattern, handleFunc, method, auth)
 }
 
@@ -131,6 +132,6 @@ func init() {
 		go sessionManager.GC()
 
 		//构建路由服务
-		restApi = &RESTApi{baseName: config.Read("web", "baseName"), mux: http.NewServeMux(), sessionManager: sessionManager}
+		restApi = &RESTApi{baseName: config.Read("web", "baseName"), muxRouter: mux.NewServeMux(), sessionManager: sessionManager}
 	})
 }

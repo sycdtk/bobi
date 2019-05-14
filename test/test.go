@@ -2,23 +2,33 @@ package test
 
 import (
 	"fmt"
-	"sync"
+	"regexp"
+	"strings"
 )
 
-type Aaa struct {
-	Session sync.Map
+func TMain() {
+	a := "/mofy/login/11111111111111/bbbb/ccc"
+	b := "/mofy/login/{a}/{b}"
+	parse(a, b)
 }
 
-func TMain() {
-	a := 1
-	switch a {
-	case 1:
-		fallthrough
-	case 2:
-		fmt.Println("2")
-	case 3:
-		fmt.Println("3")
-	default:
-		fmt.Println("default")
+func parseURL(a, b string) {
+	data := map[string]string{}
+	path := strings.Split(a, "/")
+	uri := strings.Split(b, "/")
+	if len(path) != len(uri) {
+		fmt.Println("err")
+	}
+	for i, _ := range uri {
+		if path[i] != uri[i] {
+			params := regexp.MustCompile("{(.*)}").FindStringSubmatch(uri[i])
+			if len(params) == 2 {
+				data[params[1]] = path[i]
+			}
+		}
+	}
+
+	for k, v := range data {
+		fmt.Println(k, v)
 	}
 }
