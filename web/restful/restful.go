@@ -72,7 +72,7 @@ func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request, map[
 			//Header 默认值设置
 			res.Header().Add("Content-type", "application/json")
 
-			content = handler(res, req)
+			content = handler(res, req, paramsMap)
 
 			logger.Debug(content)
 
@@ -112,7 +112,7 @@ func HandleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Reque
 	restApi.handleFunc(pattern, handleFunc, method, auth)
 }
 
-func Handle(pattern string, handler http.Handler) {
+func Handle(pattern string, handler mux.Handler) {
 	restApi.handle(pattern, handler)
 }
 
