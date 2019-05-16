@@ -61,7 +61,6 @@ type muxEntry struct {
 	pattern    string
 	method     string         //请求类型
 	pathParams map[int]string //路由参数
-	auth       bool           //认证信息
 }
 
 // NewServeMux allocates and returns a new ServeMux.
@@ -279,7 +278,7 @@ func (mux *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Handle registers the handler for the given pattern.
 // If a handler already exists for pattern, Handle panics.
-func (mux *ServeMux) Handle(pattern string, handler Handler, method string, auth bool) {
+func (mux *ServeMux) Handle(pattern string, handler Handler, method string) {
 	mux.mu.Lock()
 	defer mux.mu.Unlock()
 
@@ -305,7 +304,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler, method string, auth
 			mux.rm = make(map[string]muxEntry)
 		}
 
-		e := muxEntry{h: handler, pattern: pattern, method: method, auth: auth, pathParams: paramsMap}
+		e := muxEntry{h: handler, pattern: pattern, method: method, pathParams: paramsMap}
 		mux.rm[regexpPattern] = e
 
 		if pattern[0] != '/' {
@@ -322,7 +321,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler, method string, auth
 			mux.m = make(map[string]muxEntry)
 		}
 
-		e := muxEntry{h: handler, pattern: pattern, method: method, auth: auth}
+		e := muxEntry{h: handler, pattern: pattern, method: method}
 		mux.m[pattern] = e
 		if len(pattern) != 1 && pattern[len(pattern)-1] == '/' {
 			mux.es = appendSorted(mux.es, e)
@@ -365,11 +364,11 @@ func appendSorted(es []muxEntry, e muxEntry) []muxEntry {
 }
 
 // HandleFunc registers the handler function for the given pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request, map[string]string), method string, auth bool) {
+func (mux *ServeMux) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request, map[string]string), method string) {
 	if handler == nil {
 		panic("http: nil handler")
 	}
-	mux.Handle(pattern, HandlerFunc(handler), method, auth)
+	mux.Handle(pattern, HandlerFunc(handler), method)
 }
 
 // The HandlerFunc type is an adapter to allow the use of

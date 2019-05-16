@@ -1,4 +1,3 @@
-//借鉴参考自：https://github.com/dougblack/sleepy
 package restful
 
 import (
@@ -7,10 +6,11 @@ import (
 	"strconv"
 	"sync"
 
+	"restful/restful/mux"
+
 	"github.com/sycdtk/bobi/config"
 	"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/web/message"
-	"github.com/sycdtk/bobi/web/restful/mux"
 	"github.com/sycdtk/bobi/web/session"
 	"github.com/sycdtk/bobi/web/session/memory"
 )
@@ -26,7 +26,7 @@ type RESTApi struct {
 }
 
 //请求验证及请求类型判断
-func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request, map[string]string) interface{}, method string, auth bool) mux.HandlerFunc {
+func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request, map[string]string) interface{}, auth bool) mux.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request, paramsMap map[string]string) {
 
 		if req.ParseForm() != nil {
@@ -67,20 +67,13 @@ func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request, map[
 		//请求类型解析
 		var content interface{}
 
-		if req.Method == method {
-			//实际业务逻辑
-			//Header 默认值设置
-			res.Header().Add("Content-type", "application/json")
+		//实际业务逻辑
+		//Header 默认值设置
+		res.Header().Add("Content-type", "application/json")
 
-			content = handler(res, req, paramsMap)
+		content = handler(res, req, paramsMap)
 
-			logger.Debug(content)
-
-		} else {
-			res.WriteHeader(http.StatusMethodNotAllowed)
-			res.Write(message.NewMessage(message.FailedCode, message.FailedMsg, nil))
-			return
-		}
+		logger.Debug(content)
 
 		//写返回数据
 		res.Write(message.NewMessage(message.SuccessCode, message.SuccessMsg, content))
@@ -88,11 +81,11 @@ func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request, map[
 }
 
 func (api *RESTApi) handleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Request, map[string]string) interface{}, method string, auth bool) {
-	api.muxRouter.HandleFunc(api.path(pattern), api.wapper(handleFunc, method, auth))
+	api.muxRouter.HandleFunc(api.path(pattern), api.wapper(handleFunc, auth), method)
 }
 
-func (api *RESTApi) handle(pattern string, handler mux.Handler) {
-	api.muxRouter.Handle(api.path(pattern), handler)
+func (api *RESTApi) handle(pattern string, handler mux.Handler, method string) {
+	api.muxRouter.Handle(api.path(pattern), handler, method)
 }
 
 func (api *RESTApi) path(pattern string) string {
@@ -112,8 +105,8 @@ func HandleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Reque
 	restApi.handleFunc(pattern, handleFunc, method, auth)
 }
 
-func Handle(pattern string, handler mux.Handler) {
-	restApi.handle(pattern, handler)
+func Handle(pattern string, handler mux.Handler, method string) {
+	restApi.handle(pattern, handler, method)
 }
 
 //构建函数(单例模式)
