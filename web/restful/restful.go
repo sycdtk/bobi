@@ -104,8 +104,21 @@ func HandleFunc(pattern string, handleFunc func(http.ResponseWriter, *http.Reque
 	restApi.handleFunc(pattern, handleFunc, method, auth)
 }
 
-func Handle(pattern string, handler mux.Handler, method string) {
-	restApi.handle(pattern, handler, method)
+//http.Handler 转mux.Handler
+type handlerTrans struct {
+	handler http.Handler
+}
+
+func (ht *handlerTrans) ServeHTTP(res http.ResponseWriter, req *http.Request, paramsMap map[string]string) {
+	ht.handler.ServeHTTP(res, req)
+}
+
+func handlerTransFunc(handler http.Handler) mux.Handler {
+	return &handlerTrans{handler: handler}
+}
+
+func Handle(pattern string, handler http.Handler, method string) {
+	restApi.handle(pattern, handlerTransFunc(handler), method)
 }
 
 //构建函数(单例模式)
