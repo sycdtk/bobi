@@ -6,11 +6,10 @@ import (
 	"strconv"
 	"sync"
 
-	"restful/restful/mux"
-
 	"github.com/sycdtk/bobi/config"
 	"github.com/sycdtk/bobi/logger"
 	"github.com/sycdtk/bobi/web/message"
+	"github.com/sycdtk/bobi/web/restful/mux"
 	"github.com/sycdtk/bobi/web/session"
 	"github.com/sycdtk/bobi/web/session/memory"
 )
