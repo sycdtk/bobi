@@ -37,7 +37,6 @@ func (api *RESTApi) wapper(handler func(http.ResponseWriter, *http.Request, map[
 		//权限认证
 		//检查sessionid
 		cookie, err := req.Cookie(api.baseName)
-		logger.Debug(cookie, err)
 		if err != nil || cookie.Value == "" { //cookie中的session id不存在，无权限
 			if auth { //需要鉴权
 				res.WriteHeader(http.StatusUnauthorized)
