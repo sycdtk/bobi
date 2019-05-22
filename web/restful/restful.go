@@ -121,6 +121,10 @@ func Handle(pattern string, handler http.Handler, method string) {
 	restApi.handle(pattern, handlerTransFunc(handler), method)
 }
 
+func BasePath(pattern string) string {
+	return restApi.path(pattern)
+}
+
 //构建函数(单例模式)
 func init() {
 	once.Do(func() {
