@@ -87,6 +87,10 @@ func (api *RESTApi) handle(pattern string, handler mux.Handler, method string) {
 	api.muxRouter.Handle(api.path(pattern), handler, method)
 }
 
+func (api *RESTApi) handleRealPath(pattern string, handler mux.Handler, method string) {
+	api.muxRouter.Handle(pattern, handler, method)
+}
+
 func (api *RESTApi) path(pattern string) string {
 	prefix := api.baseName
 	if prefix != "" {
@@ -119,6 +123,10 @@ func handlerTransFunc(handler http.Handler) mux.Handler {
 
 func Handle(pattern string, handler http.Handler, method string) {
 	restApi.handle(pattern, handlerTransFunc(http.StripPrefix(restApi.path(pattern), handler)), method)
+}
+
+func HandleRealPath(pattern string, handler http.Handler, method string) {
+	restApi.handleRealPath(pattern, handlerTransFunc(http.StripPrefix(pattern, handler)), method)
 }
 
 //构建函数(单例模式)
