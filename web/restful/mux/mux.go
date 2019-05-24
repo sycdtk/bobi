@@ -323,7 +323,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler, method string) {
 
 		e := muxEntry{h: handler, pattern: pattern, method: method}
 		mux.m[pattern] = e
-		if len(pattern) != 1 && pattern[len(pattern)-1] == '/' {
+		if pattern[len(pattern)-1] == '/' {
 			mux.es = appendSorted(mux.es, e)
 		}
 
