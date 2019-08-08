@@ -91,10 +91,6 @@ func (api *RESTApi) handleRealPath(pattern string, handler mux.Handler, method s
 	api.muxRouter.Handle(pattern, handler, method)
 }
 
-func (api *RESTApi) Redirect(w http.ResponseWriter, r *http.Request, url string, code int) {
-	http.Redirect(w, r, api.path(url), code)
-}
-
 func (api *RESTApi) path(pattern string) string {
 	prefix := api.baseName
 	if prefix != "" {
@@ -131,10 +127,6 @@ func Handle(pattern string, handler http.Handler, method string) {
 
 func HandleRealPath(pattern string, handler http.Handler, method string) {
 	restApi.handleRealPath(pattern, handlerTransFunc(http.StripPrefix(pattern, handler)), method)
-}
-
-func Redirect(w http.ResponseWriter, r *http.Request, url string, code int) {
-	restApi.Redirect(w, r, url, code)
 }
 
 //构建函数(单例模式)
