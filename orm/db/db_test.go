@@ -188,3 +188,11 @@ func TestDB(t *testing.T) {
 	// 	t.Log("")
 	// }
 }
+
+func TestTransaction(t *testing.T) {
+	tx := BeginTransaction()
+	tx.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('999','liubei1','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('888','liubei2','2019-01-01 00:00:00','1','30','3.1215','4.222','ww');")
+	tx.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('777','liubei3','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx.EndTransaction()
+}

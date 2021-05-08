@@ -9,6 +9,7 @@ import (
 	"github.com/sycdtk/bobi/config"
 	"github.com/sycdtk/bobi/errtools"
 	"github.com/sycdtk/bobi/logger"
+	"github.com/sycdtk/bobi/random"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -20,6 +21,20 @@ var pool *DBPool
 
 type DBPool struct {
 	conns map[string]*sql.DB //多数据库连接池  db名称:数据库连接
+}
+
+//事务的单个执行语句及参数
+type ExecSql struct {
+	ESql string
+	Args []interface{}
+}
+
+// 事务
+type Transaction struct {
+	ID       string
+	DBName   string
+	Tx       *sql.Tx
+	Execsqls []*ExecSql
 }
 
 //数据库初始化
@@ -133,4 +148,74 @@ func ExecuteDB(dbName, execSql string, args ...interface{}) {
 	} else {
 		logger.Info("DB", dbName, " not found")
 	}
+}
+
+//开启事务
+func BeginTransaction() *Transaction {
+	return BeginTransactionDB("default")
+}
+
+//开启事务
+func BeginTransactionDB(dbName string) *Transaction {
+	if db, ok := pool.conns[dbName]; ok {
+		tx, err := db.Begin()
+		if err != nil {
+			logger.Err("DB", dbName, ":", "开启事务失败", err)
+			return nil
+		} else {
+			id := random.UniqueID()
+			logger.Debug("DB", dbName, ":", "事务开始", id)
+			return &Transaction{
+				ID:       id,
+				DBName:   dbName,
+				Tx:       tx,
+				Execsqls: []*ExecSql{},
+			}
+		}
+	} else {
+		logger.Err("DB", dbName, " not found")
+		return nil
+	}
+}
+
+// Execute  "INSERT INTO users(name,age) values(?,?)"
+// UPDATE  "UPDATE users SET age = ? WHERE id = ?"
+// DELETE "DELETE FROM users WHERE id = ?"
+// Create "CREATE TABLE(...)"
+// Drop "DROP TABLE..."
+func (t *Transaction) Execute(execSql string, args ...interface{}) {
+	t.Execsqls = append(t.Execsqls, &ExecSql{ESql: execSql, Args: args})
+}
+
+//事务结束提交
+func (t *Transaction) EndTransaction() {
+
+	var err error
+	var stmt *sql.Stmt
+	var result sql.Result
+
+	defer func() {
+		if err != nil {
+			logger.Err("DB", t.DBName, ":", "事务执行失败", t.ID, err)
+			t.Tx.Rollback()
+		} else {
+			t.Tx.Commit()
+		}
+	}()
+	if len(t.Execsqls) > 0 {
+		for _, esql := range t.Execsqls {
+			stmt, err = t.Tx.Prepare(esql.ESql)
+			if err != nil {
+				return
+			}
+
+			result, err = stmt.Exec(esql.Args...)
+
+			lastID, _ := result.LastInsertId()
+			affectNum, _ := result.RowsAffected()
+
+			logger.Debug("DB", t.DBName, ":", esql.ESql, esql.Args, "，最后ID：", lastID, "，受影响行数：", affectNum)
+		}
+	}
+	logger.Debug("DB", t.DBName, ":", "事务结束", t.ID)
 }
