@@ -4,9 +4,13 @@ import (
 	"sync"
 
 	"github.com/sycdtk/bobi/expression"
-	"github.com/sycdtk/bobi/orm"
+	// "github.com/sycdtk/bobi/orm"
 
 	. "github.com/sycdtk/bobi/workflow/model"
+)
+
+const (
+	modelName = "wf"
 )
 
 var once sync.Once
@@ -31,7 +35,7 @@ type Engine struct {
 func init() {
 	once.Do(func() {
 		//注册ORM对象
-		orm.Register(func() interface{} { return &Line{} })
+		//orm.Register(modelName, func() interface{} { return &Line{} })
 
 		processDefs := map[string]*ProcessDef{}
 		nodes := map[string]map[string]*Node{}
