@@ -106,3 +106,13 @@ func TableExistDB(dbName, tableName string) bool {
 
 	return isExist > 0
 }
+
+//开启事务
+func BeginTransaction() *db.Transaction {
+	return BeginTransactionDB("default")
+}
+
+//开启事务
+func BeginTransactionDB(dbName string) *db.Transaction {
+	return db.BeginTransaction()
+}

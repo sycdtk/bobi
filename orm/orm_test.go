@@ -356,3 +356,7 @@ func TestTableExist(t *testing.T) {
 	}
 
 }
+
+func TestTransaction(t *testing.T) {
+
+}

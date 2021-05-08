@@ -190,9 +190,24 @@ func TestDB(t *testing.T) {
 }
 
 func TestTransaction(t *testing.T) {
+	//默认数据库失败
 	tx := BeginTransaction()
 	tx.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('999','liubei1','2019-01-01 00:00:00','1','30','3.1215','4.222');")
 	tx.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('888','liubei2','2019-01-01 00:00:00','1','30','3.1215','4.222','ww');")
 	tx.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('777','liubei3','2019-01-01 00:00:00','1','30','3.1215','4.222');")
 	tx.EndTransaction()
+
+	//默认数据库成功
+	tx1 := BeginTransaction()
+	tx1.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('999','liubei1','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx1.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('888','liubei2','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx1.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('777','liubei3','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx1.EndTransaction()
+
+	//指定数据库
+	tx2 := BeginTransactionDB("test4")
+	tx2.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('999','liubei1','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx2.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('888','liubei2','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx2.Execute("insert into bobi_test_aaa (id,username,birth,sex,age,xxx,yyy) values ('777','liubei3','2019-01-01 00:00:00','1','30','3.1215','4.222');")
+	tx2.EndTransaction()
 }
