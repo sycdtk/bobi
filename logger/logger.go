@@ -52,7 +52,7 @@ func SetLevel(lvl string) {
 func Debug(v ...interface{}) {
 	if ldebug == mylogger.level&ldebug {
 		mylogger.m.Lock()
-		mylogger.Logger.SetPrefix("D: ")
+		mylogger.Logger.SetPrefix("[DEBUG]: ")
 		mylogger.Logger.Output(2, fmt.Sprintln(v...))
 		mylogger.Logger.SetPrefix("   ")
 		mylogger.m.Unlock()
@@ -63,7 +63,7 @@ func Debug(v ...interface{}) {
 func Info(v ...interface{}) {
 	if linfo == mylogger.level&linfo || ldebug == mylogger.level&ldebug {
 		mylogger.m.Lock()
-		mylogger.Logger.SetPrefix("I: ")
+		mylogger.Logger.SetPrefix("[INFO ]: ")
 		mylogger.Logger.Output(2, fmt.Sprintln(v...))
 		mylogger.Logger.SetPrefix("   ")
 		mylogger.m.Unlock()
@@ -86,7 +86,7 @@ func Println(v ...interface{}) {
 func Err(v ...interface{}) {
 	if linfo == mylogger.level&linfo || ldebug == mylogger.level&ldebug || lerror == mylogger.level&lerror {
 		mylogger.m.Lock()
-		mylogger.Logger.SetPrefix("E: ")
+		mylogger.Logger.SetPrefix("[ERROR]: ")
 		mylogger.Logger.Output(2, fmt.Sprintln(v...))
 		mylogger.Logger.SetPrefix("   ")
 		mylogger.m.Unlock()
@@ -97,7 +97,7 @@ func Err(v ...interface{}) {
 func Err3(v ...interface{}) {
 	if linfo == mylogger.level&linfo || ldebug == mylogger.level&ldebug || lerror == mylogger.level&lerror {
 		mylogger.m.Lock()
-		mylogger.Logger.SetPrefix("E: ")
+		mylogger.Logger.SetPrefix("[ERROR]: ")
 		mylogger.Logger.Output(3, fmt.Sprintln(v...))
 		mylogger.Logger.SetPrefix("   ")
 		mylogger.m.Unlock()
